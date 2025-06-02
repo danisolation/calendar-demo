@@ -1,10 +1,25 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { CalendarState, CalendarEvent } from "../types/calendar";
-import { format, addDays, isSameDay, parseISO } from "date-fns";
+import {
+  CalendarState,
+  CalendarEvent,
+  FilterType,
+  CalendarViewType,
+} from "../types/calendar";
+import {
+  format,
+  addDays,
+  addWeeks,
+  addMonths,
+  addYears,
+  isSameDay,
+  parseISO,
+  differenceInMinutes,
+  differenceInDays,
+} from "date-fns";
 
 const initialState: CalendarState = {
   events: [],
-  selectedDate: format(new Date(), "yyyy-MM-dd"),
+  selectedDate: new Date().toISOString().split("T")[0],
   view: "month",
   loading: false,
   error: null,
@@ -17,39 +32,73 @@ const generateRecurringEvents = (event: CalendarEvent): CalendarEvent[] => {
 
   const events: CalendarEvent[] = [];
   const startDate = parseISO(event.startTime);
-  const endRecurring = event.recurringPattern.endDate
-    ? parseISO(event.recurringPattern.endDate)
-    : addDays(startDate, 30); // Default to 30 days if no end date
+  const eventEndDate = parseISO(event.endTime);
+  const eventDuration = differenceInMinutes(eventEndDate, startDate);
+
+  // Determine end date for recurring pattern
+  let endRecurring: Date;
+  if (event.recurringPattern.endDate) {
+    endRecurring = parseISO(event.recurringPattern.endDate);
+  } else if (event.recurringPattern.occurrences) {
+    // Calculate end date based on occurrences
+    const { interval, frequency } = event.recurringPattern;
+    let lastDate = startDate;
+    for (let i = 1; i < event.recurringPattern.occurrences; i++) {
+      switch (frequency) {
+        case "DAY":
+          lastDate = addDays(lastDate, interval);
+          break;
+        case "WEEK":
+          lastDate = addWeeks(lastDate, interval);
+          break;
+        case "MONTH":
+          lastDate = addMonths(lastDate, interval);
+          break;
+        case "YEAR":
+          lastDate = addYears(lastDate, interval);
+          break;
+      }
+    }
+    endRecurring = lastDate;
+  } else {
+    // Default to 1 year if no end date or occurrences specified
+    endRecurring = addYears(startDate, 1);
+  }
 
   let currentDate = startDate;
-  while (currentDate <= endRecurring) {
+  let occurrenceCount = 0;
+  const maxOccurrences = event.recurringPattern.occurrences || Infinity;
+
+  while (currentDate <= endRecurring && occurrenceCount < maxOccurrences) {
+    // Create new event instance
+    const newEventStart = currentDate;
+    const newEventEnd = new Date(
+      newEventStart.getTime() + eventDuration * 60000
+    );
+
     const newEvent = {
       ...event,
       id: `${event.id}-${format(currentDate, "yyyy-MM-dd")}`,
-      startTime: format(currentDate, "yyyy-MM-dd'T'HH:mm:ss"),
-      endTime: format(addDays(currentDate, 0), "yyyy-MM-dd'T'HH:mm:ss"),
+      startTime: format(newEventStart, "yyyy-MM-dd'T'HH:mm:ss"),
+      endTime: format(newEventEnd, "yyyy-MM-dd'T'HH:mm:ss"),
     };
     events.push(newEvent);
+    occurrenceCount++;
 
     // Calculate next occurrence based on frequency
-    switch (event.recurringPattern.frequency) {
-      case "daily":
-        currentDate = addDays(currentDate, event.recurringPattern.interval);
+    const { interval, frequency } = event.recurringPattern;
+    switch (frequency) {
+      case "DAY":
+        currentDate = addDays(currentDate, interval);
         break;
-      case "weekly":
-        currentDate = addDays(currentDate, 7 * event.recurringPattern.interval);
+      case "WEEK":
+        currentDate = addWeeks(currentDate, interval);
         break;
-      case "monthly":
-        currentDate = addDays(
-          currentDate,
-          30 * event.recurringPattern.interval
-        );
+      case "MONTH":
+        currentDate = addMonths(currentDate, interval);
         break;
-      case "yearly":
-        currentDate = addDays(
-          currentDate,
-          365 * event.recurringPattern.interval
-        );
+      case "YEAR":
+        currentDate = addYears(currentDate, interval);
         break;
     }
   }
@@ -119,7 +168,7 @@ const calendarSlice = createSlice({
     setSelectedDate: (state, action: PayloadAction<string>) => {
       state.selectedDate = action.payload;
     },
-    setView: (state, action: PayloadAction<"month" | "week" | "day">) => {
+    setView: (state, action: PayloadAction<CalendarViewType>) => {
       state.view = action.payload;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -128,10 +177,7 @@ const calendarSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setFilter: (
-      state,
-      action: PayloadAction<"all" | "appointment" | "webinar">
-    ) => {
+    setFilter: (state, action: PayloadAction<FilterType>) => {
       state.filter = action.payload;
     },
     setExpandedEvent: (state, action: PayloadAction<string | null>) => {

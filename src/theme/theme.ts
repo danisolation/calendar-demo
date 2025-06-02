@@ -37,11 +37,11 @@ const theme = createTheme({
       secondary: "#94A3B8",
     },
     calendar: {
-      lightBlue: "#5684AE",
+      lightBlue: "#1a73e8",
       darkBlue: "#0F4C81",
-      lightOrange: "#FFE4C8",
+      lightOrange: "#f6bf26",
       darkOrange: "#F9BE81",
-      tileColor: "#E4F6ED",
+      tileColor: "rgba(26, 115, 232, 0.08)",
     },
     divider: "rgba(0, 0, 0, 0.06)",
   },
@@ -161,6 +161,15 @@ const theme = createTheme({
           height: 24,
           fontSize: "0.875rem",
           border: "2px solid #FFFFFF",
+        },
+      },
+    },
+    MuiButtonGroup: {
+      styleOverrides: {
+        grouped: {
+          "&:not(:last-of-type)": {
+            borderColor: "rgba(0, 0, 0, 0.12)",
+          },
         },
       },
     },
