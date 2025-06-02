@@ -67,7 +67,7 @@ const api = {
             color: "#5684AE",
             isRecurring: true,
             recurringPattern: {
-              frequency: "monthly",
+              frequency: "MONTH",
               interval: 1,
               endDate: "2024-12-31",
             },
@@ -82,7 +82,7 @@ const api = {
             color: "#5684AE",
             isRecurring: true,
             recurringPattern: {
-              frequency: "weekly",
+              frequency: "WEEK",
               interval: 1,
               endDate: "2024-03-31",
             },
@@ -116,7 +116,7 @@ const api = {
             color: "#5684AE",
             isRecurring: true,
             recurringPattern: {
-              frequency: "daily",
+              frequency: "DAY",
               interval: 1,
               endDate: "2024-01-31",
             },
