@@ -19,7 +19,7 @@ const fetchEvents = async (): Promise<CalendarEvent[]> => {
       clientAvatar: "https://i.pravatar.cc/150?img=1",
       isRecurring: true,
       recurringPattern: {
-        frequency: "weekly",
+        frequency: "WEEK",
         interval: 1,
         endDate: "2025-07-01",
       },
@@ -45,7 +45,7 @@ const fetchEvents = async (): Promise<CalendarEvent[]> => {
       clientAvatar: "https://i.pravatar.cc/150?img=2",
       isRecurring: true,
       recurringPattern: {
-        frequency: "weekly",
+        frequency: "WEEK",
         interval: 1,
         endDate: "2025-07-05",
       },
@@ -99,7 +99,7 @@ const fetchEvents = async (): Promise<CalendarEvent[]> => {
       clientAvatar: "https://i.pravatar.cc/150?img=5",
       isRecurring: true,
       recurringPattern: {
-        frequency: "monthly",
+        frequency: "MONTH",
         interval: 1,
         endDate: "2025-12-20",
       },
