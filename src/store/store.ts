@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import calendarReducer from "./calendarSlice";
-import { calendarSaga } from "./calendarSaga";
+import { rootSaga } from "./sagas";
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -10,10 +10,10 @@ export const store = configureStore({
     calendar: calendarReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
+    getDefaultMiddleware().concat(sagaMiddleware),
 });
 
-sagaMiddleware.run(calendarSaga);
+sagaMiddleware.run(rootSaga);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

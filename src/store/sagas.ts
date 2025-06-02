@@ -1,0 +1,147 @@
+import { all, call, put, takeLatest } from "redux-saga/effects";
+import { setEvents, setLoading, setError } from "./calendarSlice";
+import { CalendarEvent } from "../types/calendar";
+
+// Mock API call
+const fetchEvents = async (): Promise<CalendarEvent[]> => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  return [
+    {
+      id: "1",
+      title: "First Session with Alex Stan",
+      startTime: "2025-06-01T09:00:00",
+      endTime: "2025-06-01T10:00:00",
+      type: "appointment",
+      description: "Initial consultation session",
+      clientName: "Alex Stan",
+      clientAvatar: "https://i.pravatar.cc/150?img=1",
+      isRecurring: true,
+      recurringPattern: {
+        frequency: "weekly",
+        interval: 1,
+        endDate: "2025-07-01",
+      },
+    },
+    {
+      id: "2",
+      title: "Webinar: Mindfulness at Work",
+      startTime: "2025-06-03T14:00:00",
+      endTime: "2025-06-03T15:30:00",
+      type: "webinar",
+      description:
+        "Learn mindfulness techniques for workplace stress management",
+      location: "Zoom Meeting",
+    },
+    {
+      id: "3",
+      title: "Therapy Session with Sarah",
+      startTime: "2025-06-05T11:00:00",
+      endTime: "2025-06-05T12:00:00",
+      type: "appointment",
+      description: "Weekly therapy session",
+      clientName: "Sarah Johnson",
+      clientAvatar: "https://i.pravatar.cc/150?img=2",
+      isRecurring: true,
+      recurringPattern: {
+        frequency: "weekly",
+        interval: 1,
+        endDate: "2025-07-05",
+      },
+    },
+    {
+      id: "4",
+      title: "Group Session: Anxiety Management",
+      startTime: "2025-06-10T15:00:00",
+      endTime: "2025-06-10T16:30:00",
+      type: "webinar",
+      description: "Interactive group session on managing anxiety",
+      location: "Google Meet",
+    },
+    {
+      id: "5",
+      title: "Consultation with David",
+      startTime: "2025-06-12T09:30:00",
+      endTime: "2025-06-12T10:30:00",
+      type: "appointment",
+      description: "First consultation meeting",
+      clientName: "David Chen",
+      clientAvatar: "https://i.pravatar.cc/150?img=3",
+    },
+    {
+      id: "6",
+      title: "Webinar: Work-Life Balance",
+      startTime: "2025-06-15T13:00:00",
+      endTime: "2025-06-15T14:30:00",
+      type: "webinar",
+      description: "Tips and strategies for maintaining work-life balance",
+      location: "Zoom Meeting",
+    },
+    {
+      id: "7",
+      title: "Follow-up with Emma",
+      startTime: "2025-06-17T16:00:00",
+      endTime: "2025-06-17T17:00:00",
+      type: "appointment",
+      description: "Follow-up session",
+      clientName: "Emma Wilson",
+      clientAvatar: "https://i.pravatar.cc/150?img=4",
+    },
+    {
+      id: "8",
+      title: "Monthly Check-in with Michael",
+      startTime: "2025-06-20T10:00:00",
+      endTime: "2025-06-20T11:00:00",
+      type: "appointment",
+      description: "Monthly progress review",
+      clientName: "Michael Brown",
+      clientAvatar: "https://i.pravatar.cc/150?img=5",
+      isRecurring: true,
+      recurringPattern: {
+        frequency: "monthly",
+        interval: 1,
+        endDate: "2025-12-20",
+      },
+    },
+    {
+      id: "9",
+      title: "Stress Management Workshop",
+      startTime: "2025-06-24T14:00:00",
+      endTime: "2025-06-24T16:00:00",
+      type: "webinar",
+      description: "Interactive workshop on stress management techniques",
+      location: "Zoom Meeting",
+    },
+    {
+      id: "10",
+      title: "Evening Session with Lisa",
+      startTime: "2025-06-26T18:00:00",
+      endTime: "2025-06-26T19:00:00",
+      type: "appointment",
+      description: "Evening therapy session",
+      clientName: "Lisa Anderson",
+      clientAvatar: "https://i.pravatar.cc/150?img=6",
+    },
+  ];
+};
+
+function* fetchEventsSaga() {
+  try {
+    yield put(setLoading(true));
+    const events: CalendarEvent[] = yield call(fetchEvents);
+    yield put(setEvents(events));
+  } catch (error) {
+    yield put(
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch events"
+      )
+    );
+  } finally {
+    yield put(setLoading(false));
+  }
+}
+
+export function* rootSaga() {
+  yield all([takeLatest("calendar/fetchEvents", fetchEventsSaga)]);
+}
