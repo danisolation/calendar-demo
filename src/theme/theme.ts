@@ -1,4 +1,5 @@
 import { createTheme } from "@mui/material/styles";
+import { Theme } from "@mui/material/styles";
 
 declare module "@mui/material/styles" {
   interface Palette {
@@ -21,15 +22,19 @@ declare module "@mui/material/styles" {
   }
 }
 
-export const theme = createTheme({
+const theme = createTheme({
   palette: {
     primary: {
-      main: "#0F4C81", // Dark Blue
-      light: "#5684AE", // Light Blue
+      main: "#0F4C81",
+      light: "#5684AE",
     },
-    secondary: {
-      main: "#F9BE81", // Dark Orange
-      light: "#FFE4C8", // Light Orange
+    background: {
+      default: "#F0F7F7",
+      paper: "#FFFFFF",
+    },
+    text: {
+      primary: "#2C3E50",
+      secondary: "#94A3B8",
     },
     calendar: {
       lightBlue: "#5684AE",
@@ -38,44 +43,128 @@ export const theme = createTheme({
       darkOrange: "#F9BE81",
       tileColor: "#E4F6ED",
     },
+    divider: "rgba(0, 0, 0, 0.06)",
+  },
+  typography: {
+    fontFamily: [
+      "-apple-system",
+      "BlinkMacSystemFont",
+      '"Segoe UI"',
+      "Roboto",
+      '"Helvetica Neue"',
+      "Arial",
+      "sans-serif",
+    ].join(","),
+    h5: {
+      fontSize: "1.25rem",
+      fontWeight: 600,
+      color: "#0F4C81",
+    },
+    h6: {
+      fontSize: "1rem",
+      fontWeight: 600,
+      color: "#0F4C81",
+    },
+    subtitle1: {
+      fontSize: "0.875rem",
+      fontWeight: 500,
+    },
+    subtitle2: {
+      fontSize: "0.8125rem",
+      fontWeight: 500,
+    },
+    body1: {
+      fontSize: "0.875rem",
+    },
+    body2: {
+      fontSize: "0.8125rem",
+    },
+    caption: {
+      fontSize: "0.75rem",
+      lineHeight: 1.5,
+    },
+    button: {
+      textTransform: "none",
+      fontWeight: 500,
+    },
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: "none",
+          borderRadius: 20,
+          fontSize: "0.8125rem",
+          padding: "4px 12px",
+          minHeight: 32,
+        },
+        outlined: {
+          borderColor: "#E2E8F0",
+          color: "#64748B",
+          "&:hover": {
+            borderColor: "#CBD5E1",
+            backgroundColor: "rgba(15, 76, 129, 0.04)",
+          },
+        },
+        contained: {
+          backgroundColor: "#5684AE",
+          color: "#FFFFFF",
+          "&:hover": {
+            backgroundColor: "#0F4C81",
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: "#0F4C81",
+          padding: 8,
+          "&:hover": {
+            backgroundColor: "rgba(15, 76, 129, 0.04)",
+          },
+        },
+        sizeSmall: {
+          padding: 6,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          backgroundColor: "#FFFFFF",
           borderRadius: 8,
         },
       },
+      defaultProps: {
+        elevation: 0,
+      },
     },
-    MuiCard: {
+    MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+          height: 20,
+          fontSize: "0.6875rem",
+          backgroundColor: "#5684AE",
+          color: "#FFFFFF",
+          fontWeight: 500,
+        },
+        sizeSmall: {
+          height: 18,
+        },
+      },
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          width: 24,
+          height: 24,
+          fontSize: "0.875rem",
+          border: "2px solid #FFFFFF",
         },
       },
     },
   },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: "2rem",
-      fontWeight: 600,
-    },
-    h2: {
-      fontSize: "1.5rem",
-      fontWeight: 600,
-    },
-    h3: {
-      fontSize: "1.25rem",
-      fontWeight: 500,
-    },
-    body1: {
-      fontSize: "1rem",
-    },
-    body2: {
-      fontSize: "0.875rem",
-    },
-  },
 });
+
+export default theme;
