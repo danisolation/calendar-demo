@@ -10,6 +10,9 @@ import {
   eachDayOfInterval,
   isSameMonth,
   isSameDay,
+  isToday,
+  startOfWeek,
+  endOfWeek,
 } from "date-fns";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
@@ -34,15 +37,21 @@ const MiniCalendar: React.FC = () => {
     dispatch(setSelectedDate(format(date, "yyyy-MM-dd")));
   };
 
-  const days = eachDayOfInterval({
-    start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth),
-  });
-
-  const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const getDaysInMonth = () => {
+    const start = startOfWeek(startOfMonth(currentMonth));
+    const end = endOfWeek(endOfMonth(currentMonth));
+    return eachDayOfInterval({ start, end });
+  };
 
   return (
-    <Paper elevation={0} sx={{ p: 2, bgcolor: "background.default" }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 2,
+        bgcolor: "background.default",
+        borderRadius: 2,
+      }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -51,12 +60,38 @@ const MiniCalendar: React.FC = () => {
           mb: 2,
         }}
       >
-        <Typography variant="h6">{format(currentMonth, "MMM yyyy")}</Typography>
-        <Box>
-          <IconButton onClick={handlePreviousMonth} size="small">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton
+            onClick={handlePreviousMonth}
+            size="small"
+            sx={{
+              color: "primary.main",
+              "&:hover": {
+                bgcolor: "rgba(86, 132, 174, 0.1)",
+              },
+            }}
+          >
             <ChevronLeft />
           </IconButton>
-          <IconButton onClick={handleNextMonth} size="small">
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 500,
+              color: "primary.main",
+            }}
+          >
+            {format(currentMonth, "MMM yyyy")}
+          </Typography>
+          <IconButton
+            onClick={handleNextMonth}
+            size="small"
+            sx={{
+              color: "primary.main",
+              "&:hover": {
+                bgcolor: "rgba(86, 132, 174, 0.1)",
+              },
+            }}
+          >
             <ChevronRight />
           </IconButton>
         </Box>
@@ -67,26 +102,36 @@ const MiniCalendar: React.FC = () => {
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
           gap: 0.5,
+          mb: 1,
         }}
       >
-        {weekDays.map((day) => (
+        {["S", "M", "T", "W", "T", "F", "S"].map((day) => (
           <Typography
             key={day}
             variant="caption"
             sx={{
               textAlign: "center",
               color: "text.secondary",
-              fontWeight: "bold",
               fontSize: "0.75rem",
+              fontWeight: 500,
             }}
           >
             {day}
           </Typography>
         ))}
+      </Box>
 
-        {days.map((day) => {
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: 0.5,
+        }}
+      >
+        {getDaysInMonth().map((day) => {
           const isSelected = isSameDay(new Date(selectedDate), day);
           const isCurrentMonth = isSameMonth(day, currentMonth);
+          const dayIsToday = isToday(day);
 
           return (
             <Box
@@ -99,18 +144,44 @@ const MiniCalendar: React.FC = () => {
                 height: 32,
                 cursor: "pointer",
                 borderRadius: 1,
-                bgcolor: isSelected ? "primary.main" : "transparent",
+                position: "relative",
+                bgcolor: isSelected
+                  ? "primary.main"
+                  : dayIsToday
+                  ? "primary.light"
+                  : "transparent",
                 color: isSelected
                   ? "common.white"
                   : !isCurrentMonth
                   ? "text.disabled"
+                  : dayIsToday
+                  ? "common.white"
                   : "text.primary",
                 "&:hover": {
                   bgcolor: isSelected ? "primary.dark" : "action.hover",
                 },
+                ...(dayIsToday && {
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 2,
+                    width: 4,
+                    height: 4,
+                    borderRadius: "50%",
+                    bgcolor: "common.white",
+                  },
+                }),
               }}
             >
-              <Typography variant="body2">{format(day, "d")}</Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: isSelected || dayIsToday ? 600 : 400,
+                  fontSize: "0.875rem",
+                }}
+              >
+                {format(day, "d")}
+              </Typography>
             </Box>
           );
         })}

@@ -1,4 +1,6 @@
 export type EventType = "appointment" | "webinar";
+export type ViewType = "month" | "week" | "day";
+export type FilterType = "all" | EventType;
 
 export interface CalendarEvent {
   id: string;
@@ -23,9 +25,11 @@ export interface CalendarEvent {
 export interface CalendarState {
   events: CalendarEvent[];
   selectedDate: string;
-  view: "month" | "week" | "day";
+  view: ViewType;
   loading: boolean;
   error: string | null;
+  filter: FilterType;
+  expandedEvent: string | null;
 }
 
 export interface CalendarDay {

@@ -1,31 +1,73 @@
-import React from "react";
-import { Box, Container, ThemeProvider, CssBaseline } from "@mui/material";
-import { Provider } from "react-redux";
+import React, { useEffect } from "react";
+import { Box, ThemeProvider, CssBaseline } from "@mui/material";
+import { Provider, useDispatch } from "react-redux";
 import { store } from "./store/store";
-import { theme } from "./theme/theme";
+import theme from "./theme/theme";
 import MiniCalendar from "./components/MiniCalendar";
 import UpcomingEvents from "./components/UpcomingEvents";
 import MainCalendar from "./components/MainCalendar";
+import { fetchEvents } from "./store/calendarSlice";
+
+const CalendarApp: React.FC = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchEvents());
+  }, [dispatch]);
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+        p: 2,
+        gap: 2,
+      }}
+    >
+      {/* Left Sidebar */}
+      <Box
+        sx={{
+          width: { xs: "100%", sm: 280 },
+          height: "calc(100vh - 32px)",
+          display: { xs: "none", sm: "block" },
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          overflow: "hidden",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <MiniCalendar />
+          <UpcomingEvents />
+        </Box>
+      </Box>
+
+      {/* Main Content */}
+      <Box
+        sx={{
+          flex: 1,
+          height: "calc(100vh - 32px)",
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          overflow: "hidden",
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <MainCalendar />
+      </Box>
+    </Box>
+  );
+};
 
 const App: React.FC = () => {
   return (
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ display: "flex", gap: 4 }}>
-            {/* Left Sidebar */}
-            <Box sx={{ width: 300 }}>
-              <MiniCalendar />
-              <UpcomingEvents />
-            </Box>
-
-            {/* Main Calendar */}
-            <Box sx={{ flex: 1 }}>
-              <MainCalendar />
-            </Box>
-          </Box>
-        </Container>
+        <CalendarApp />
       </ThemeProvider>
     </Provider>
   );
