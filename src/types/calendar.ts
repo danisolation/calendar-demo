@@ -1,6 +1,8 @@
 export type EventType = "appointment" | "webinar";
 export type ViewType = "month" | "week" | "day";
-export type FilterType = "all" | EventType;
+export type FilterType = "all" | "appointment" | "webinar";
+
+export type CalendarViewType = "month" | "week" | "day";
 
 export interface CalendarEvent {
   id: string;
@@ -15,7 +17,7 @@ export interface CalendarEvent {
   color?: string;
   isRecurring?: boolean;
   recurringPattern?: {
-    frequency: "daily" | "weekly" | "monthly" | "yearly";
+    frequency: "DAY" | "WEEK" | "MONTH" | "YEAR";
     interval: number;
     endDate?: string;
     occurrences?: number;
@@ -25,7 +27,7 @@ export interface CalendarEvent {
 export interface CalendarState {
   events: CalendarEvent[];
   selectedDate: string;
-  view: ViewType;
+  view: CalendarViewType;
   loading: boolean;
   error: string | null;
   filter: FilterType;
