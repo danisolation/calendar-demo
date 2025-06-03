@@ -14,12 +14,17 @@ import { CalendarEvent } from "../types/calendar";
 interface DayViewProps {
   currentDate: Date;
   onEventClick: (eventId: string) => void;
+  onCellDoubleClick?: (date: Date) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const CURRENT_TIME_INDICATOR_HEIGHT = 2;
 
-const DayView: React.FC<DayViewProps> = ({ currentDate, onEventClick }) => {
+const DayView: React.FC<DayViewProps> = ({
+  currentDate,
+  onEventClick,
+  onCellDoubleClick,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const events = useSelector((state: RootState) => state.calendar.events);
@@ -188,6 +193,20 @@ const DayView: React.FC<DayViewProps> = ({ currentDate, onEventClick }) => {
                     bgcolor: "rgba(0,0,0,0.02)",
                   },
                 }}
+                onDoubleClick={() =>
+                  onCellDoubleClick &&
+                  onCellDoubleClick(
+                    new Date(
+                      currentDate.getFullYear(),
+                      currentDate.getMonth(),
+                      currentDate.getDate(),
+                      hour,
+                      0,
+                      0,
+                      0
+                    )
+                  )
+                }
               >
                 {/* Half-hour marker */}
                 <Box
