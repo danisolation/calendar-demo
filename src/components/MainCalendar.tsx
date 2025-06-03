@@ -18,6 +18,9 @@ import {
   ButtonGroup,
   useTheme,
   useMediaQuery,
+  TextField,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import {
   ChevronLeft,
@@ -56,6 +59,7 @@ import {
   setFilter,
   setExpandedEvent,
   setView,
+  addEvent,
 } from "../store/calendarSlice";
 import { CalendarEvent, FilterType, CalendarViewType } from "../types/calendar";
 import WeekView from "./WeekView";
@@ -76,6 +80,27 @@ const MainCalendar: React.FC = () => {
     (state: RootState) => state.calendar.expandedEvent
   );
   const dispatch = useDispatch();
+
+  const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
+  const [newEvent, setNewEvent] = React.useState<Partial<CalendarEvent>>({
+    title: "",
+    startTime: "",
+    endTime: "",
+    type: "appointment",
+    location: "",
+    description: "",
+    isRecurring: false,
+  });
+  const [recurringPattern, setRecurringPattern] = React.useState<{
+    frequency: "DAY" | "WEEK" | "MONTH" | "YEAR";
+    interval: number;
+    endDate?: string;
+    occurrences?: number;
+  }>({
+    frequency: "WEEK",
+    interval: 1,
+  });
+  const [useEndDate, setUseEndDate] = React.useState(true);
 
   const handlePrevious = () => {
     switch (view) {
@@ -359,6 +384,57 @@ const MainCalendar: React.FC = () => {
 
   const expandedEvent = events.find((event) => event.id === expandedEventId);
 
+  const handleCreateEvent = () => {
+    if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) return;
+    let event: CalendarEvent = {
+      ...newEvent,
+      id: Date.now().toString(),
+      isRecurring: !!newEvent.isRecurring,
+    } as CalendarEvent;
+    if (newEvent.isRecurring) {
+      event.recurringPattern = {
+        frequency: recurringPattern.frequency,
+        interval: recurringPattern.interval,
+        ...(useEndDate && recurringPattern.endDate
+          ? { endDate: recurringPattern.endDate }
+          : {}),
+        ...(!useEndDate && recurringPattern.occurrences
+          ? { occurrences: recurringPattern.occurrences }
+          : {}),
+      };
+    }
+    dispatch(addEvent(event));
+    setOpenCreateDialog(false);
+    setNewEvent({
+      title: "",
+      startTime: "",
+      endTime: "",
+      type: "appointment",
+      location: "",
+      description: "",
+      isRecurring: false,
+    });
+    setRecurringPattern({ frequency: "WEEK", interval: 1 });
+    setUseEndDate(true);
+  };
+
+  const handleCellDoubleClick = (date: Date) => {
+    // Gợi ý 1 tiếng
+    const start = date;
+    const end = new Date(date.getTime() + 60 * 60 * 1000);
+    setNewEvent((prev) => ({
+      ...prev,
+      title: "",
+      startTime: start.toISOString().slice(0, 16),
+      endTime: end.toISOString().slice(0, 16),
+      type: "appointment",
+      location: "",
+      description: "",
+      isRecurring: false,
+    }));
+    setOpenCreateDialog(true);
+  };
+
   return (
     <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, height: "100%" }}>
       {/* Header */}
@@ -395,6 +471,14 @@ const MainCalendar: React.FC = () => {
               <ChevronRight />
             </IconButton>
           </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenCreateDialog(true)}
+            sx={{ ml: 2 }}
+          >
+            Tạo sự kiện
+          </Button>
         </Box>
 
         <Box
@@ -459,10 +543,18 @@ const MainCalendar: React.FC = () => {
       <Box sx={{ height: "calc(100% - 100px)" }}>
         {view === "month" && renderMonthView()}
         {view === "week" && (
-          <WeekView currentDate={currentDate} onEventClick={handleEventClick} />
+          <WeekView
+            currentDate={currentDate}
+            onEventClick={handleEventClick}
+            onCellDoubleClick={handleCellDoubleClick}
+          />
         )}
         {view === "day" && (
-          <DayView currentDate={currentDate} onEventClick={handleEventClick} />
+          <DayView
+            currentDate={currentDate}
+            onEventClick={handleEventClick}
+            onCellDoubleClick={handleCellDoubleClick}
+          />
         )}
       </Box>
 
@@ -580,6 +672,173 @@ const MainCalendar: React.FC = () => {
             </DialogActions>
           </>
         )}
+      </Dialog>
+
+      <Dialog
+        open={openCreateDialog}
+        onClose={() => setOpenCreateDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Tạo sự kiện mới</DialogTitle>
+        <DialogContent>
+          <Box
+            component="form"
+            sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 2 }}
+          >
+            <TextField
+              label="Tiêu đề"
+              fullWidth
+              value={newEvent.title}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, title: e.target.value })
+              }
+            />
+            <TextField
+              label="Thời gian bắt đầu"
+              type="datetime-local"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={newEvent.startTime}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, startTime: e.target.value })
+              }
+            />
+            <TextField
+              label="Thời gian kết thúc"
+              type="datetime-local"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={newEvent.endTime}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, endTime: e.target.value })
+              }
+            />
+            <FormControl fullWidth>
+              <InputLabel>Loại</InputLabel>
+              <Select
+                value={newEvent.type}
+                label="Loại"
+                onChange={(e) =>
+                  setNewEvent({ ...newEvent, type: e.target.value as any })
+                }
+              >
+                <MenuItem value="appointment">Cuộc hẹn</MenuItem>
+                <MenuItem value="webinar">Webinar</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Địa điểm"
+              fullWidth
+              value={newEvent.location}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, location: e.target.value })
+              }
+            />
+            <TextField
+              label="Mô tả"
+              fullWidth
+              multiline
+              minRows={2}
+              value={newEvent.description}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, description: e.target.value })
+              }
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={!!newEvent.isRecurring}
+                  onChange={(e) =>
+                    setNewEvent({ ...newEvent, isRecurring: e.target.checked })
+                  }
+                />
+              }
+              label="Lặp lại"
+            />
+            {newEvent.isRecurring && (
+              <Box
+                sx={{ pl: 2, display: "flex", flexDirection: "column", gap: 2 }}
+              >
+                <FormControl fullWidth>
+                  <InputLabel>Tần suất</InputLabel>
+                  <Select
+                    value={recurringPattern.frequency}
+                    label="Tần suất"
+                    onChange={(e) =>
+                      setRecurringPattern({
+                        ...recurringPattern,
+                        frequency: e.target.value as any,
+                      })
+                    }
+                  >
+                    <MenuItem value="DAY">Hàng ngày</MenuItem>
+                    <MenuItem value="WEEK">Hàng tuần</MenuItem>
+                    <MenuItem value="MONTH">Hàng tháng</MenuItem>
+                    <MenuItem value="YEAR">Hàng năm</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Khoảng cách lặp (số)"
+                  type="number"
+                  fullWidth
+                  value={recurringPattern.interval}
+                  onChange={(e) =>
+                    setRecurringPattern({
+                      ...recurringPattern,
+                      interval: Number(e.target.value),
+                    })
+                  }
+                  inputProps={{ min: 1 }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={useEndDate}
+                      onChange={(e) => setUseEndDate(e.target.checked)}
+                    />
+                  }
+                  label="Kết thúc theo ngày"
+                />
+                {useEndDate ? (
+                  <TextField
+                    label="Ngày kết thúc"
+                    type="date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    value={recurringPattern.endDate || ""}
+                    onChange={(e) =>
+                      setRecurringPattern({
+                        ...recurringPattern,
+                        endDate: e.target.value,
+                      })
+                    }
+                  />
+                ) : (
+                  <TextField
+                    label="Số lần lặp"
+                    type="number"
+                    fullWidth
+                    value={recurringPattern.occurrences || ""}
+                    onChange={(e) =>
+                      setRecurringPattern({
+                        ...recurringPattern,
+                        occurrences: Number(e.target.value),
+                      })
+                    }
+                    inputProps={{ min: 1 }}
+                  />
+                )}
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCreateDialog(false)}>Hủy</Button>
+          <Button variant="contained" onClick={handleCreateEvent}>
+            Tạo
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );

@@ -18,12 +18,17 @@ import { CalendarEvent } from "../types/calendar";
 interface WeekViewProps {
   currentDate: Date;
   onEventClick: (eventId: string) => void;
+  onCellDoubleClick?: (date: Date) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const CURRENT_TIME_INDICATOR_HEIGHT = 2;
 
-const WeekView: React.FC<WeekViewProps> = ({ currentDate, onEventClick }) => {
+const WeekView: React.FC<WeekViewProps> = ({
+  currentDate,
+  onEventClick,
+  onCellDoubleClick,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const events = useSelector((state: RootState) => state.calendar.events);
@@ -232,6 +237,20 @@ const WeekView: React.FC<WeekViewProps> = ({ currentDate, onEventClick }) => {
                         bgcolor: "rgba(0,0,0,0.02)",
                       },
                     }}
+                    onDoubleClick={() =>
+                      onCellDoubleClick &&
+                      onCellDoubleClick(
+                        new Date(
+                          day.getFullYear(),
+                          day.getMonth(),
+                          day.getDate(),
+                          hour,
+                          0,
+                          0,
+                          0
+                        )
+                      )
+                    }
                   >
                     {/* Half-hour marker */}
                     <Box
