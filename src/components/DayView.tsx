@@ -10,6 +10,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { CalendarEvent } from "../types/calendar";
+import { log } from "console";
 
 interface DayViewProps {
   currentDate: Date;
@@ -193,20 +194,20 @@ const DayView: React.FC<DayViewProps> = ({
                     bgcolor: "rgba(0,0,0,0.02)",
                   },
                 }}
-                onDoubleClick={() =>
-                  onCellDoubleClick &&
-                  onCellDoubleClick(
-                    new Date(
+                onDoubleClick={(e) => {
+                  if (onCellDoubleClick) {
+                    const clickedDate = new Date(
                       currentDate.getFullYear(),
                       currentDate.getMonth(),
                       currentDate.getDate(),
                       hour,
-                      0,
+                      0, // Luôn set phút về 0
                       0,
                       0
-                    )
-                  )
-                }
+                    );
+                    onCellDoubleClick(clickedDate);
+                  }
+                }}
               >
                 {/* Half-hour marker */}
                 <Box
