@@ -5,17 +5,7 @@ import {
   FilterType,
   CalendarViewType,
 } from "../types/calendar";
-import {
-  format,
-  addDays,
-  addWeeks,
-  addMonths,
-  addYears,
-  isSameDay,
-  parseISO,
-  differenceInMinutes,
-  differenceInDays,
-} from "date-fns";
+import { generateRecurringEventsFromRRule } from "../utils/rruleUtils";
 
 const initialState: CalendarState = {
   events: [],
@@ -25,85 +15,6 @@ const initialState: CalendarState = {
   error: null,
   filter: "all",
   expandedEvent: null,
-};
-
-const generateRecurringEvents = (event: CalendarEvent): CalendarEvent[] => {
-  if (!event.isRecurring || !event.recurringPattern) return [event];
-
-  const events: CalendarEvent[] = [];
-  const startDate = parseISO(event.startTime);
-  const eventEndDate = parseISO(event.endTime);
-  const eventDuration = differenceInMinutes(eventEndDate, startDate);
-
-  // Determine end date for recurring pattern
-  let endRecurring: Date;
-  if (event.recurringPattern.endDate) {
-    endRecurring = parseISO(event.recurringPattern.endDate);
-  } else if (event.recurringPattern.occurrences) {
-    // Calculate end date based on occurrences
-    const { interval, frequency } = event.recurringPattern;
-    let lastDate = startDate;
-    for (let i = 1; i < event.recurringPattern.occurrences; i++) {
-      switch (frequency) {
-        case "DAY":
-          lastDate = addDays(lastDate, interval);
-          break;
-        case "WEEK":
-          lastDate = addWeeks(lastDate, interval);
-          break;
-        case "MONTH":
-          lastDate = addMonths(lastDate, interval);
-          break;
-        case "YEAR":
-          lastDate = addYears(lastDate, interval);
-          break;
-      }
-    }
-    endRecurring = lastDate;
-  } else {
-    // Default to 1 year if no end date or occurrences specified
-    endRecurring = addYears(startDate, 1);
-  }
-
-  let currentDate = startDate;
-  let occurrenceCount = 0;
-  const maxOccurrences = event.recurringPattern.occurrences || Infinity;
-
-  while (currentDate <= endRecurring && occurrenceCount < maxOccurrences) {
-    // Create new event instance
-    const newEventStart = currentDate;
-    const newEventEnd = new Date(
-      newEventStart.getTime() + eventDuration * 60000
-    );
-
-    const newEvent = {
-      ...event,
-      id: `${event.id}-${format(currentDate, "yyyy-MM-dd")}`,
-      startTime: format(newEventStart, "yyyy-MM-dd'T'HH:mm:ss"),
-      endTime: format(newEventEnd, "yyyy-MM-dd'T'HH:mm:ss"),
-    };
-    events.push(newEvent);
-    occurrenceCount++;
-
-    // Calculate next occurrence based on frequency
-    const { interval, frequency } = event.recurringPattern;
-    switch (frequency) {
-      case "DAY":
-        currentDate = addDays(currentDate, interval);
-        break;
-      case "WEEK":
-        currentDate = addWeeks(currentDate, interval);
-        break;
-      case "MONTH":
-        currentDate = addMonths(currentDate, interval);
-        break;
-      case "YEAR":
-        currentDate = addYears(currentDate, interval);
-        break;
-    }
-  }
-
-  return events;
 };
 
 const calendarSlice = createSlice({
@@ -118,7 +29,8 @@ const calendarSlice = createSlice({
       const allEvents: CalendarEvent[] = [];
       action.payload.forEach((event) => {
         if (event.isRecurring) {
-          allEvents.push(...generateRecurringEvents(event));
+          // Use RRule to generate recurring events
+          allEvents.push(...generateRecurringEventsFromRRule(event));
         } else {
           allEvents.push(event);
         }
@@ -128,7 +40,8 @@ const calendarSlice = createSlice({
     },
     addEvent: (state, action: PayloadAction<CalendarEvent>) => {
       if (action.payload.isRecurring) {
-        state.events.push(...generateRecurringEvents(action.payload));
+        // Use RRule to generate recurring events
+        state.events.push(...generateRecurringEventsFromRRule(action.payload));
       } else {
         state.events.push(action.payload);
       }
@@ -136,10 +49,14 @@ const calendarSlice = createSlice({
     updateEvent: (state, action: PayloadAction<CalendarEvent>) => {
       // Remove all instances of recurring event if it's recurring
       if (action.payload.isRecurring) {
+        // Remove all instances of this recurring event
         state.events = state.events.filter(
-          (event) => !event.id.startsWith(action.payload.id)
+          (event) =>
+            !event.id.startsWith(action.payload.id) &&
+            event.originalEventId !== action.payload.id
         );
-        state.events.push(...generateRecurringEvents(action.payload));
+        // Add updated recurring events
+        state.events.push(...generateRecurringEventsFromRRule(action.payload));
       } else {
         const index = state.events.findIndex(
           (event) => event.id === action.payload.id
@@ -151,19 +68,32 @@ const calendarSlice = createSlice({
     },
     deleteEvent: (state, action: PayloadAction<string>) => {
       // Find the event to check if it's recurring
-      const eventToDelete = state.events.find((e) =>
-        e.id.startsWith(action.payload)
+      const eventToDelete = state.events.find(
+        (e) =>
+          e.id.startsWith(action.payload) ||
+          e.originalEventId === action.payload
       );
-      if (eventToDelete?.isRecurring) {
+
+      if (eventToDelete?.isRecurring || eventToDelete?.originalEventId) {
         // Delete all instances of recurring event
+        const baseId = eventToDelete.originalEventId || action.payload;
         state.events = state.events.filter(
-          (event) => !event.id.startsWith(action.payload)
+          (event) =>
+            !event.id.startsWith(baseId) &&
+            event.originalEventId !== baseId &&
+            event.id !== baseId
         );
       } else {
         state.events = state.events.filter(
           (event) => event.id !== action.payload
         );
       }
+    },
+    deleteRecurringInstance: (state, action: PayloadAction<string>) => {
+      // Delete only a specific instance of a recurring event
+      state.events = state.events.filter(
+        (event) => event.id !== action.payload
+      );
     },
     setSelectedDate: (state, action: PayloadAction<string>) => {
       state.selectedDate = action.payload;
@@ -192,6 +122,7 @@ export const {
   addEvent,
   updateEvent,
   deleteEvent,
+  deleteRecurringInstance,
   setSelectedDate,
   setView,
   setLoading,
