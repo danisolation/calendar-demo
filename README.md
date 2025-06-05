@@ -60,28 +60,28 @@ A high-performance, feature-rich calendar application built with React, TypeScri
 
 ```
 src/
-├── components/              # Modular UI components
-│   ├── CalendarHeader.tsx   # Navigation and controls (160 lines)
-│   ├── MonthView.tsx        # Calendar grid with events (301 lines)
-│   ├── CreateEventDialog.tsx# Event creation form (220 lines)
-│   ├── EventDetailsDialog.tsx# Event details display (116 lines)
-│   ├── TimeSuggestionDialog.tsx# Time slot selection (79 lines)
-│   ├── MiniCalendar.tsx     # Compact date picker
-│   ├── UpcomingEvents.tsx   # Event list sidebar
-│   └── MainCalendar.tsx     # Main composition (159 lines)
-├── hooks/                   # Custom React hooks
-│   └── useCalendarLogic.ts  # Centralized state logic (284 lines)
-├── utils/                   # Utility functions
-│   ├── calendarUtils.ts     # Calendar operations and styling
-│   └── rruleUtils.ts        # RRule utilities and presets
-├── store/                   # Redux state management
-│   ├── store.ts             # Store configuration
-│   ├── calendarSlice.ts     # Calendar state slice
-│   └── calendarSaga.ts      # Async operations
-├── types/                   # TypeScript definitions
-│   └── calendar.ts          # Calendar-specific types
-└── theme/                   # Material-UI theming
-    └── theme.ts             # Custom theme configuration
+├── components/             
+│   ├── CalendarHeader.tsx   
+│   ├── MonthView.tsx        
+│   ├── CreateEventDialog.tsx
+│   ├── EventDetailsDialog.tsx
+│   ├── TimeSuggestionDialog.tsx
+│   ├── MiniCalendar.tsx    
+│   ├── UpcomingEvents.tsx   
+│   └── MainCalendar.tsx     
+├── hooks/                   
+│   └── useCalendarLogic.ts  
+├── utils/                  
+│   ├── calendarUtils.ts    
+│   └── rruleUtils.ts        
+├── store/                  
+│   ├── store.ts            
+│   ├── calendarSlice.ts     
+│   └── calendarSaga.ts      
+├── types/                  
+│   └── calendar.ts         
+└── theme/                   
+    └── theme.ts            
 ```
 
 ## 🚀 Getting Started
