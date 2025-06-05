@@ -1,26 +1,25 @@
-import React, { useMemo, useCallback } from "react";
 import {
-  Box,
-  Typography,
-  IconButton,
-  Button,
-  ButtonGroup,
-  Select,
-  MenuItem,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
-import {
+  CalendarViewMonth,
   ChevronLeft,
   ChevronRight,
   Today,
   ViewDay,
   ViewWeek,
-  CalendarViewMonth,
 } from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  IconButton,
+  MenuItem,
+  Select,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import React, { useCallback, useMemo } from "react";
 import { CalendarViewType } from "../types/calendar";
 import { formatHeaderDate } from "../utils/calendarUtils";
-
 interface CalendarHeaderProps {
   currentDate: Date;
   view: CalendarViewType;
@@ -30,7 +29,6 @@ interface CalendarHeaderProps {
   onCreateEvent: () => void;
   onTodayClick: () => void;
 }
-
 const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
   ({
     currentDate,
@@ -43,14 +41,10 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
   }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-    // Memoize formatted date to avoid recalculation
     const formattedDate = useMemo(
       () => formatHeaderDate(currentDate, isMobile),
       [currentDate, isMobile]
     );
-
-    // Memoize view change handlers
     const handleDayView = useCallback(
       () => onViewChange("day"),
       [onViewChange]
@@ -63,16 +57,12 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
       () => onViewChange("month"),
       [onViewChange]
     );
-
-    // Memoize view selection handler for mobile
     const handleViewSelect = useCallback(
       (e: any) => {
         onViewChange(e.target.value as CalendarViewType);
       },
       [onViewChange]
     );
-
-    // Memoize view buttons to prevent re-renders
     const viewButtons = useMemo(
       () => (
         <ButtonGroup size="small" sx={{ display: { xs: "none", sm: "flex" } }}>
@@ -98,8 +88,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
       ),
       [view, handleDayView, handleWeekView, handleMonthView]
     );
-
-    // Memoize mobile view selector
     const mobileViewSelector = useMemo(
       () => (
         <Select
@@ -119,7 +107,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
       ),
       [view, handleViewSelect]
     );
-
     return (
       <Box
         sx={{
@@ -175,7 +162,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
             Tạo sự kiện
           </Button>
         </Box>
-
         <Box
           sx={{
             display: "flex",
@@ -201,7 +187,5 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(
     );
   }
 );
-
 CalendarHeader.displayName = "CalendarHeader";
-
 export default CalendarHeader;

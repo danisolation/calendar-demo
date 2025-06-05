@@ -1,193 +1,1 @@
-import React from "react";
-import { Box, Typography, Paper, IconButton } from "@mui/material";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import {
-  format,
-  addMonths,
-  subMonths,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isSameMonth,
-  isSameDay,
-  isToday,
-  startOfWeek,
-  endOfWeek,
-} from "date-fns";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../store/store";
-import { setSelectedDate } from "../store/calendarSlice";
-
-const MiniCalendar: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = React.useState(new Date());
-  const selectedDate = useSelector(
-    (state: RootState) => state.calendar.selectedDate
-  );
-  const dispatch = useDispatch();
-
-  const handlePreviousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
-  };
-
-  const handleDateClick = (date: Date) => {
-    dispatch(setSelectedDate(format(date, "yyyy-MM-dd")));
-  };
-
-  const getDaysInMonth = () => {
-    const start = startOfWeek(startOfMonth(currentMonth));
-    const end = endOfWeek(endOfMonth(currentMonth));
-    return eachDayOfInterval({ start, end });
-  };
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 2,
-        bgcolor: "background.default",
-        borderRadius: 2,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton
-            onClick={handlePreviousMonth}
-            size="small"
-            sx={{
-              color: "primary.main",
-              "&:hover": {
-                bgcolor: "rgba(86, 132, 174, 0.1)",
-              },
-            }}
-          >
-            <ChevronLeft />
-          </IconButton>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 500,
-              color: "primary.main",
-            }}
-          >
-            {format(currentMonth, "MMM yyyy")}
-          </Typography>
-          <IconButton
-            onClick={handleNextMonth}
-            size="small"
-            sx={{
-              color: "primary.main",
-              "&:hover": {
-                bgcolor: "rgba(86, 132, 174, 0.1)",
-              },
-            }}
-          >
-            <ChevronRight />
-          </IconButton>
-        </Box>
-      </Box>
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 0.5,
-          mb: 1,
-        }}
-      >
-        {["S", "M", "T", "W", "T", "F", "S"].map((day) => (
-          <Typography
-            key={day}
-            variant="caption"
-            sx={{
-              textAlign: "center",
-              color: "text.secondary",
-              fontSize: "0.75rem",
-              fontWeight: 500,
-            }}
-          >
-            {day}
-          </Typography>
-        ))}
-      </Box>
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 0.5,
-        }}
-      >
-        {getDaysInMonth().map((day) => {
-          const isSelected = isSameDay(new Date(selectedDate), day);
-          const isCurrentMonth = isSameMonth(day, currentMonth);
-          const dayIsToday = isToday(day);
-
-          return (
-            <Box
-              key={day.toString()}
-              onClick={() => handleDateClick(day)}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: 32,
-                cursor: "pointer",
-                borderRadius: 1,
-                position: "relative",
-                bgcolor: isSelected
-                  ? "primary.main"
-                  : dayIsToday
-                  ? "primary.light"
-                  : "transparent",
-                color: isSelected
-                  ? "common.white"
-                  : !isCurrentMonth
-                  ? "text.disabled"
-                  : dayIsToday
-                  ? "common.white"
-                  : "text.primary",
-                "&:hover": {
-                  bgcolor: isSelected ? "primary.dark" : "action.hover",
-                },
-                ...(dayIsToday && {
-                  "&::after": {
-                    content: '""',
-                    position: "absolute",
-                    bottom: 2,
-                    width: 4,
-                    height: 4,
-                    borderRadius: "50%",
-                    bgcolor: "common.white",
-                  },
-                }),
-              }}
-            >
-              <Typography
-                variant="caption"
-                sx={{
-                  fontWeight: isSelected || dayIsToday ? 600 : 400,
-                  fontSize: "0.875rem",
-                }}
-              >
-                {format(day, "d")}
-              </Typography>
-            </Box>
-          );
-        })}
-      </Box>
-    </Paper>
-  );
-};
-
-export default MiniCalendar;
+import React from "react";import { Box, Typography, Paper, IconButton } from "@mui/material";import { ChevronLeft, ChevronRight } from "@mui/icons-material";import {  format,  addMonths,  subMonths,  startOfMonth,  endOfMonth,  eachDayOfInterval,  isSameMonth,  isSameDay,  isToday,  startOfWeek,  endOfWeek,} from "date-fns";import { useSelector, useDispatch } from "react-redux";import { RootState } from "../store/store";import { setSelectedDate } from "../store/calendarSlice";const MiniCalendar: React.FC = () => {  const [currentMonth, setCurrentMonth] = React.useState(new Date());  const selectedDate = useSelector(    (state: RootState) => state.calendar.selectedDate  );  const dispatch = useDispatch();  const handlePreviousMonth = () => {    setCurrentMonth(subMonths(currentMonth, 1));  };  const handleNextMonth = () => {    setCurrentMonth(addMonths(currentMonth, 1));  };  const handleDateClick = (date: Date) => {    dispatch(setSelectedDate(format(date, "yyyy-MM-dd")));  };  const getDaysInMonth = () => {    const start = startOfWeek(startOfMonth(currentMonth));    const end = endOfWeek(endOfMonth(currentMonth));    return eachDayOfInterval({ start, end });  };  return (    <Paper      elevation={0}      sx={{        p: 2,        bgcolor: "background.default",        borderRadius: 2,      }}    >      <Box        sx={{          display: "flex",          alignItems: "center",          justifyContent: "space-between",          mb: 2,        }}      >        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>          <IconButton            onClick={handlePreviousMonth}            size="small"            sx={{              color: "primary.main",              "&:hover": {                bgcolor: "rgba(86, 132, 174, 0.1)",              },            }}          >            <ChevronLeft />          </IconButton>          <Typography            variant="subtitle1"            sx={{              fontWeight: 500,              color: "primary.main",            }}          >            {format(currentMonth, "MMM yyyy")}          </Typography>          <IconButton            onClick={handleNextMonth}            size="small"            sx={{              color: "primary.main",              "&:hover": {                bgcolor: "rgba(86, 132, 174, 0.1)",              },            }}          >            <ChevronRight />          </IconButton>        </Box>      </Box>      <Box        sx={{          display: "grid",          gridTemplateColumns: "repeat(7, 1fr)",          gap: 0.5,          mb: 1,        }}      >        {["S", "M", "T", "W", "T", "F", "S"].map((day) => (          <Typography            key={day}            variant="caption"            sx={{              textAlign: "center",              color: "text.secondary",              fontSize: "0.75rem",              fontWeight: 500,            }}          >            {day}          </Typography>        ))}      </Box>      <Box        sx={{          display: "grid",          gridTemplateColumns: "repeat(7, 1fr)",          gap: 0.5,        }}      >        {getDaysInMonth().map((day) => {          const isSelected = isSameDay(new Date(selectedDate), day);          const isCurrentMonth = isSameMonth(day, currentMonth);          const dayIsToday = isToday(day);          return (            <Box              key={day.toString()}              onClick={() => handleDateClick(day)}              sx={{                display: "flex",                alignItems: "center",                justifyContent: "center",                height: 32,                cursor: "pointer",                borderRadius: 1,                position: "relative",                bgcolor: isSelected                  ? "primary.main"                  : dayIsToday                  ? "primary.light"                  : "transparent",                color: isSelected                  ? "common.white"                  : !isCurrentMonth                  ? "text.disabled"                  : dayIsToday                  ? "common.white"                  : "text.primary",                "&:hover": {                  bgcolor: isSelected ? "primary.dark" : "action.hover",                },                ...(dayIsToday && {                  "&::after": {                    content: '""',                    position: "absolute",                    bottom: 2,                    width: 4,                    height: 4,                    borderRadius: "50%",                    bgcolor: "common.white",                  },                }),              }}            >              <Typography                variant="caption"                sx={{                  fontWeight: isSelected || dayIsToday ? 600 : 400,                  fontSize: "0.875rem",                }}              >                {format(day, "d")}              </Typography>            </Box>          );        })}      </Box>    </Paper>  );};export default MiniCalendar;
