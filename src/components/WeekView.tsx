@@ -37,7 +37,11 @@ const WeekView: React.FC<WeekViewProps> = ({
 
   // Update current time every minute
   React.useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 60000);
+    const updateCurrentTime = () => {
+      setNow(new Date());
+    };
+    updateCurrentTime(); // Update immediately
+    const interval = setInterval(updateCurrentTime, 60000); // Then update every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -73,8 +77,10 @@ const WeekView: React.FC<WeekViewProps> = ({
   };
 
   const currentTimeIndicatorPosition = React.useMemo(() => {
-    const minutes = now.getHours() * 60 + now.getMinutes();
-    return (minutes / 60) * 48;
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const totalMinutes = hours * 60 + minutes;
+    return (totalMinutes / 60) * 48 + 50; // Add 50px for the header height
   }, [now]);
 
   return (
@@ -237,20 +243,20 @@ const WeekView: React.FC<WeekViewProps> = ({
                         bgcolor: "rgba(0,0,0,0.02)",
                       },
                     }}
-                    onDoubleClick={() =>
-                      onCellDoubleClick &&
-                      onCellDoubleClick(
-                        new Date(
+                    onDoubleClick={(e) => {
+                      if (onCellDoubleClick) {
+                        const clickedDate = new Date(
                           day.getFullYear(),
                           day.getMonth(),
                           day.getDate(),
                           hour,
-                          0,
+                          0, // Luôn set phút về 0
                           0,
                           0
-                        )
-                      )
-                    }
+                        );
+                        onCellDoubleClick(clickedDate);
+                      }
+                    }}
                   >
                     {/* Half-hour marker */}
                     <Box

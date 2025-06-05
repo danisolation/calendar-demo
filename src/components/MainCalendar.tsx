@@ -21,6 +21,10 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material";
 import {
   ChevronLeft,
@@ -51,6 +55,7 @@ import {
   subWeeks,
   addDays,
   subDays,
+  addHours,
 } from "date-fns";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
@@ -64,11 +69,17 @@ import {
 import { CalendarEvent, FilterType, CalendarViewType } from "../types/calendar";
 import WeekView from "./WeekView";
 import DayView from "./DayView";
+import EventListDialog from "./EventListDialog";
 
 const MainCalendar: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [openSuggestionDialog, setOpenSuggestionDialog] = React.useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = React.useState<string | null>(
+    null
+  );
+  const [suggestedDate, setSuggestedDate] = React.useState<Date | null>(null);
 
   const selectedDate = useSelector(
     (state: RootState) => state.calendar.selectedDate
@@ -82,6 +93,14 @@ const MainCalendar: React.FC = () => {
   const dispatch = useDispatch();
 
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
+  const [openAllEventsDialog, setOpenAllEventsDialog] = React.useState(false);
+  const [selectedDayEvents, setSelectedDayEvents] = React.useState<{
+    date: Date;
+    events: CalendarEvent[];
+  }>({
+    date: new Date(),
+    events: [],
+  });
   const [newEvent, setNewEvent] = React.useState<Partial<CalendarEvent>>({
     title: "",
     startTime: "",
@@ -178,6 +197,13 @@ const MainCalendar: React.FC = () => {
         overflow: "hidden",
         border: "1px solid",
         borderColor: "divider",
+        height: "100%",
+        minHeight: { xs: 500, sm: 600, md: 700 },
+        maxHeight: {
+          xs: "calc(100vh - 120px)",
+          sm: "calc(100vh - 140px)",
+          md: "calc(100vh - 160px)",
+        },
       }}
     >
       {/* Weekday Headers */}
@@ -185,7 +211,7 @@ const MainCalendar: React.FC = () => {
         <Box
           key={day}
           sx={{
-            p: 1.5,
+            p: { xs: 1, sm: 1.5 },
             textAlign: "center",
             borderBottom: "1px solid",
             borderRight: "1px solid",
@@ -193,7 +219,13 @@ const MainCalendar: React.FC = () => {
             width: "100%",
           }}
         >
-          <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: "text.secondary",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            }}
+          >
             {isMobile ? day.charAt(0) : day}
           </Typography>
         </Box>
@@ -210,15 +242,18 @@ const MainCalendar: React.FC = () => {
           <Box
             key={day.toString()}
             onClick={() => handleDateClick(day)}
+            onDoubleClick={() => {
+              setSuggestedDate(day);
+              setOpenSuggestionDialog(true);
+            }}
             sx={{
-              p: 1,
+              p: { xs: 0.5, sm: 1 },
               cursor: "pointer",
               bgcolor: isSelected ? "calendar.tileColor" : "background.paper",
               borderBottom: "1px solid",
               borderRight: "1px solid",
               borderColor: "divider",
-              minHeight: { xs: 80, sm: 120 },
-              maxHeight: { xs: 120, sm: 160 },
+              height: { xs: 80, sm: 100, md: 120 },
               width: "100%",
               position: "relative",
               overflow: "hidden",
@@ -246,7 +281,7 @@ const MainCalendar: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 1,
+                mb: { xs: 0.5, sm: 1 },
               }}
             >
               <Typography
@@ -258,6 +293,7 @@ const MainCalendar: React.FC = () => {
                     ? "primary.main"
                     : "text.primary",
                   fontWeight: dayIsToday ? 600 : 400,
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
                 }}
               >
                 {format(day, "d")}
@@ -271,7 +307,7 @@ const MainCalendar: React.FC = () => {
                     bgcolor: "primary.light",
                     color: "common.white",
                     borderRadius: 10,
-                    fontSize: "0.6875rem",
+                    fontSize: { xs: "0.625rem", sm: "0.6875rem" },
                     fontWeight: 500,
                     display: { xs: "none", sm: "block" },
                   }}
@@ -286,12 +322,12 @@ const MainCalendar: React.FC = () => {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 0.5,
-                maxHeight: "calc(100% - 28px)",
+                gap: { xs: 0.25, sm: 0.5 },
+                maxHeight: "calc(100% - 24px)",
                 overflow: "hidden",
               }}
             >
-              {dayEvents.slice(0, isMobile ? 2 : 3).map((event) => (
+              {dayEvents.slice(0, 2).map((event) => (
                 <Box
                   key={event.id}
                   onClick={(e) => {
@@ -302,7 +338,7 @@ const MainCalendar: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                     gap: 0.5,
-                    p: "2px 4px",
+                    p: { xs: "1px 2px", sm: "2px 4px" },
                     borderRadius: 0.5,
                     bgcolor:
                       event.type === "appointment"
@@ -312,13 +348,13 @@ const MainCalendar: React.FC = () => {
                       event.type === "appointment"
                         ? "common.white"
                         : "text.primary",
-                    fontSize: "0.75rem",
+                    fontSize: { xs: "0.625rem", sm: "0.75rem" },
                     border: "1px solid",
                     borderColor: "divider",
                     cursor: "pointer",
                     whiteSpace: "nowrap",
                     overflow: "hidden",
-                    minHeight: 20,
+                    minHeight: { xs: 16, sm: 20 },
                     "&:hover": {
                       filter: "brightness(0.95)",
                     },
@@ -330,6 +366,7 @@ const MainCalendar: React.FC = () => {
                       fontWeight: 500,
                       minWidth: "fit-content",
                       flexShrink: 0,
+                      fontSize: "inherit",
                     }}
                   >
                     {format(parseISO(event.startTime), "HH:mm")}
@@ -342,6 +379,7 @@ const MainCalendar: React.FC = () => {
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                       display: { xs: "none", sm: "block" },
+                      fontSize: "inherit",
                     }}
                   >
                     {event.title}
@@ -349,7 +387,7 @@ const MainCalendar: React.FC = () => {
                   {event.isRecurring && (
                     <Repeat
                       sx={{
-                        fontSize: "0.875rem",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
                         opacity: 0.8,
                         flexShrink: 0,
                         display: { xs: "none", sm: "block" },
@@ -358,22 +396,27 @@ const MainCalendar: React.FC = () => {
                   )}
                 </Box>
               ))}
-              {dayEvents.length > (isMobile ? 2 : 3) && (
-                <Typography
-                  variant="caption"
+              {dayEvents.length > 2 && (
+                <Box
+                  onClick={(e) => handleMoreEventsClick(e, day, dayEvents)}
                   sx={{
                     color: "text.secondary",
                     pl: 0.5,
-                    position: "absolute",
-                    bottom: 4,
-                    left: 8,
+                    cursor: "pointer",
                     bgcolor: "background.paper",
                     px: 1,
+                    py: 0.25,
                     borderRadius: 0.5,
+                    fontSize: { xs: "0.625rem", sm: "0.75rem" },
+                    "&:hover": {
+                      bgcolor: "action.hover",
+                    },
                   }}
                 >
-                  {dayEvents.length - (isMobile ? 2 : 3)} more
-                </Typography>
+                  <Typography variant="caption" sx={{ fontSize: "inherit" }}>
+                    +{dayEvents.length - 2} more
+                  </Typography>
+                </Box>
               )}
             </Box>
           </Box>
@@ -419,14 +462,20 @@ const MainCalendar: React.FC = () => {
   };
 
   const handleCellDoubleClick = (date: Date) => {
-    // Gợi ý 1 tiếng
-    const start = date;
-    const end = new Date(date.getTime() + 60 * 60 * 1000);
+    // Lấy giờ bắt đầu từ date được click
+    const startTime = new Date(date);
+    startTime.setMinutes(0);
+    startTime.setHours(date.getHours() + 7);
+    // Tạo giờ kết thúc bằng cách cộng thêm 1 giờ
+    const endTime = new Date(date);
+    endTime.setHours(date.getHours() + 8);
+    endTime.setMinutes(0);
+
     setNewEvent((prev) => ({
       ...prev,
       title: "",
-      startTime: start.toISOString().slice(0, 16),
-      endTime: end.toISOString().slice(0, 16),
+      startTime: startTime.toISOString().slice(0, 16),
+      endTime: endTime.toISOString().slice(0, 16),
       type: "appointment",
       location: "",
       description: "",
@@ -435,8 +484,63 @@ const MainCalendar: React.FC = () => {
     setOpenCreateDialog(true);
   };
 
+  // Generate time slots for the selected date
+  const generateTimeSlots = (date: Date) => {
+    const slots = [];
+    let currentHour = 0;
+
+    while (currentHour < 24) {
+      slots.push({
+        time: `${String(currentHour).padStart(2, "0")}:00`,
+        label: `${String(currentHour).padStart(2, "0")}:00`,
+      });
+      currentHour++;
+    }
+    return slots;
+  };
+
+  const handleTimeSlotSelect = (time: string) => {
+    if (suggestedDate) {
+      const [hours] = time.split(":");
+      const newDate = new Date(suggestedDate);
+      newDate.setHours(parseInt(hours), 0, 0, 0);
+      dispatch(setSelectedDate(format(newDate, "yyyy-MM-dd")));
+      setNewEvent((prev) => ({
+        ...prev,
+        startTime: format(newDate, "yyyy-MM-dd'T'HH:mm"),
+        endTime: format(addHours(newDate, 1), "yyyy-MM-dd'T'HH:mm"),
+      }));
+      setOpenSuggestionDialog(false);
+      setOpenCreateDialog(true);
+    }
+  };
+
+  const handleCloseSuggestionDialog = () => {
+    setOpenSuggestionDialog(false);
+    setSuggestedDate(null);
+    setSelectedTimeSlot(null);
+  };
+
+  const handleMoreEventsClick = (
+    e: React.MouseEvent,
+    day: Date,
+    events: CalendarEvent[]
+  ) => {
+    e.stopPropagation();
+    setSelectedDayEvents({ date: day, events });
+    setOpenAllEventsDialog(true);
+  };
+
   return (
-    <Box sx={{ p: { xs: 1, sm: 2, md: 3 }, height: "100%" }}>
+    <Box
+      sx={{
+        p: { xs: 1, sm: 2, md: 3 },
+        height: "100vh",
+        maxHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Header */}
       <Box
         sx={{
@@ -444,28 +548,39 @@ const MainCalendar: React.FC = () => {
           flexDirection: { xs: "column", sm: "row" },
           alignItems: { xs: "stretch", sm: "center" },
           justifyContent: "space-between",
-          gap: 2,
-          mb: 3,
+          gap: { xs: 1, sm: 2 },
+          mb: { xs: 1, sm: 2, md: 3 },
+          flexShrink: 0,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 0.5, sm: 1 },
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+          }}
+        >
           <Typography
             variant="h5"
-            sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+            sx={{
+              fontSize: { xs: "1.125rem", sm: "1.25rem", md: "1.5rem" },
+              minWidth: { xs: "100px", sm: "auto" },
+            }}
           >
             {format(currentDate, isMobile ? "MMM yyyy" : "MMMM yyyy")}
           </Typography>
           <Box sx={{ display: "flex", gap: 0.5 }}>
             <IconButton
               onClick={handlePrevious}
-              size="small"
+              size={isMobile ? "small" : "medium"}
               sx={{ color: "primary.main" }}
             >
               <ChevronLeft />
             </IconButton>
             <IconButton
               onClick={handleNext}
-              size="small"
+              size={isMobile ? "small" : "medium"}
               sx={{ color: "primary.main" }}
             >
               <ChevronRight />
@@ -474,8 +589,20 @@ const MainCalendar: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => setOpenCreateDialog(true)}
-            sx={{ ml: 2 }}
+            size={isMobile ? "small" : "medium"}
+            onClick={() => {
+              setOpenCreateDialog(true);
+              setNewEvent({
+                title: "",
+                startTime: "",
+                endTime: "",
+                type: "appointment",
+                location: "",
+                description: "",
+                isRecurring: false,
+              });
+            }}
+            sx={{ ml: { xs: 0, sm: 2 } }}
           >
             Tạo sự kiện
           </Button>
@@ -485,8 +612,9 @@ const MainCalendar: React.FC = () => {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: { xs: 0.5, sm: 1 },
             flexWrap: "wrap",
+            justifyContent: { xs: "flex-start", sm: "flex-end" },
           }}
         >
           <Button
@@ -530,7 +658,11 @@ const MainCalendar: React.FC = () => {
             onChange={(e) =>
               handleViewChange(e.target.value as CalendarViewType)
             }
-            sx={{ display: { xs: "block", sm: "none" }, minWidth: 100 }}
+            sx={{
+              display: { xs: "block", sm: "none" },
+              minWidth: 100,
+              height: 32,
+            }}
           >
             <MenuItem value="day">Day</MenuItem>
             <MenuItem value="week">Week</MenuItem>
@@ -540,7 +672,16 @@ const MainCalendar: React.FC = () => {
       </Box>
 
       {/* Calendar Content */}
-      <Box sx={{ height: "calc(100% - 100px)" }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflow: "auto",
+          "& > *": {
+            height: "100%",
+          },
+        }}
+      >
         {view === "month" && renderMonthView()}
         {view === "week" && (
           <WeekView
@@ -840,6 +981,50 @@ const MainCalendar: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Time Suggestion Dialog */}
+      <Dialog
+        open={openSuggestionDialog}
+        onClose={handleCloseSuggestionDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          Select Time
+          {suggestedDate && (
+            <Typography variant="subtitle1" color="text.secondary">
+              {format(suggestedDate, "MMMM d, yyyy")}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent dividers>
+          <List sx={{ pt: 0 }}>
+            {suggestedDate &&
+              generateTimeSlots(suggestedDate).map((slot) => (
+                <ListItem disablePadding key={slot.time}>
+                  <ListItemButton
+                    onClick={() => handleTimeSlotSelect(slot.time)}
+                    selected={selectedTimeSlot === slot.time}
+                  >
+                    <ListItemText primary={slot.label} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSuggestionDialog}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* All Events Dialog */}
+      <EventListDialog
+        open={openAllEventsDialog}
+        onClose={() => setOpenAllEventsDialog(false)}
+        date={selectedDayEvents.date}
+        events={selectedDayEvents.events}
+        onEventClick={handleEventClick}
+      />
     </Box>
   );
 };
