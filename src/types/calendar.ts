@@ -16,12 +16,19 @@ export interface CalendarEvent {
   location?: string;
   color?: string;
   isRecurring?: boolean;
+  rrule?: string;
   recurringPattern?: {
     frequency: "DAY" | "WEEK" | "MONTH" | "YEAR";
     interval: number;
     endDate?: string;
     occurrences?: number;
+    byweekday?: number[];
+    bymonth?: number[];
+    bymonthday?: number[];
+    bysetpos?: number[];
   };
+  originalEventId?: string;
+  isRecurringInstance?: boolean;
 }
 
 export interface CalendarState {
