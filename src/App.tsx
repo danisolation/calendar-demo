@@ -38,7 +38,7 @@ const CalendarApp: React.FC = () => {
           borderColor: "divider",
         }}
       >
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 2, height: "100%" }}>
           <MiniCalendar />
           <UpcomingEvents />
         </Box>

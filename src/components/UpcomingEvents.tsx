@@ -8,12 +8,17 @@ import {
   IconButton,
 } from "@mui/material";
 import { VideoCall, ChevronRight } from "@mui/icons-material";
-import { format, isToday } from "date-fns";
-import { useSelector } from "react-redux";
+import { format } from "date-fns";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../store/store";
 import { CalendarEvent } from "../types/calendar";
+import { setExpandedEvent } from "../store/calendarSlice";
+import EventListDialog from "./EventListDialog";
 
 const UpcomingEvents: React.FC = () => {
+  const [openAllEventsDialog, setOpenAllEventsDialog] = React.useState(false);
+  const dispatch = useDispatch();
+
   const selectedDate = useSelector(
     (state: RootState) => state.calendar.selectedDate
   );
@@ -22,6 +27,10 @@ const UpcomingEvents: React.FC = () => {
       event.startTime.startsWith(selectedDate)
     )
   );
+
+  const handleEventClick = (eventId: string) => {
+    dispatch(setExpandedEvent(eventId));
+  };
 
   const formatTime = (time: string) => {
     return format(new Date(time), "h:mm a");
@@ -128,7 +137,7 @@ const UpcomingEvents: React.FC = () => {
   );
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 2, height: "50%" }}>
       <Box
         sx={{
           display: "flex",
@@ -160,6 +169,7 @@ const UpcomingEvents: React.FC = () => {
         </Box>
         <Button
           endIcon={<ChevronRight />}
+          onClick={() => setOpenAllEventsDialog(true)}
           sx={{
             color: "primary.main",
             textTransform: "none",
@@ -172,18 +182,47 @@ const UpcomingEvents: React.FC = () => {
         </Button>
       </Box>
 
-      {events.length === 0 ? (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          textAlign="center"
-          sx={{ py: 4 }}
-        >
-          No events scheduled for today
-        </Typography>
-      ) : (
-        events.map((event) => <EventCard key={event.id} event={event} />)
-      )}
+      <Box
+        sx={{
+          height: "calc(100% - 50px)",
+          overflowY: "auto",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "#f1f1f1",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "#888",
+            borderRadius: "4px",
+            "&:hover": {
+              background: "#555",
+            },
+          },
+        }}
+      >
+        {events.length === 0 ? (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            textAlign="center"
+            sx={{ py: 4 }}
+          >
+            No events scheduled for today
+          </Typography>
+        ) : (
+          events.map((event) => <EventCard key={event.id} event={event} />)
+        )}
+      </Box>
+
+      <EventListDialog
+        open={openAllEventsDialog}
+        onClose={() => setOpenAllEventsDialog(false)}
+        date={new Date(selectedDate)}
+        events={events}
+        onEventClick={handleEventClick}
+      />
     </Box>
   );
 };
