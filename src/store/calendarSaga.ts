@@ -1,197 +1,1 @@
-import { takeLatest, put, call } from "redux-saga/effects";
-import { PayloadAction } from "@reduxjs/toolkit";
-import {
-  setEvents,
-  setLoading,
-  setError,
-  addEvent,
-  updateEvent,
-  deleteEvent,
-} from "./calendarSlice";
-import { CalendarEvent } from "../types/calendar";
-import { RRULE_PRESETS } from "../utils/rruleUtils";
-
-// Mock API calls - replace with actual API endpoints
-const api = {
-  fetchEvents: async () => {
-    // Simulate API call
-    return new Promise<CalendarEvent[]>((resolve) => {
-      setTimeout(() => {
-        resolve([
-          // Non-recurring events
-          {
-            id: "1",
-            title: "Team Meeting",
-            startTime: "2024-01-15T09:00:00",
-            endTime: "2024-01-15T10:00:00",
-            type: "appointment",
-            location: "Conference Room A",
-            description: "Weekly team sync meeting",
-            isRecurring: false,
-          },
-          {
-            id: "2",
-            title: "Project Review",
-            startTime: "2024-01-16T14:00:00",
-            endTime: "2024-01-16T15:30:00",
-            type: "webinar",
-            location: "Online",
-            description: "Review project progress and milestones",
-            isRecurring: false,
-          },
-
-          // RRule-based recurring events
-          {
-            id: "3",
-            title: "Daily Standup",
-            startTime: "2024-01-15T09:30:00",
-            endTime: "2024-01-15T10:00:00",
-            type: "appointment",
-            location: "Conference Room B",
-            description: "Daily team standup meeting",
-            isRecurring: true,
-            rrule: "FREQ=DAILY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR;COUNT=30", // Weekdays only for 30 occurrences
-          },
-          {
-            id: "4",
-            title: "Weekly Tech Talk",
-            startTime: "2024-01-19T15:00:00",
-            endTime: "2024-01-19T16:00:00",
-            type: "webinar",
-            location: "Main Auditorium",
-            description: "Weekly technical presentation",
-            isRecurring: true,
-            rrule: RRULE_PRESETS.WEEKLY + ";COUNT=20", // Weekly for 20 weeks
-          },
-          {
-            id: "5",
-            title: "Monthly All-Hands",
-            startTime: "2024-01-01T10:00:00",
-            endTime: "2024-01-01T11:30:00",
-            type: "webinar",
-            location: "Main Auditorium",
-            description: "Company-wide monthly meeting",
-            isRecurring: true,
-            rrule: "FREQ=MONTHLY;INTERVAL=1;BYDAY=1MO;COUNT=12", // First Monday of every month for 12 months
-          },
-          {
-            id: "6",
-            title: "Quarterly Review",
-            startTime: "2024-01-31T13:00:00",
-            endTime: "2024-01-31T17:00:00",
-            type: "appointment",
-            location: "Executive Conference Room",
-            description: "Quarterly business review meeting",
-            isRecurring: true,
-            rrule: "FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=-1;COUNT=4", // Last day of quarter for 4 quarters
-          },
-
-          // Legacy recurring events (for backwards compatibility testing)
-          {
-            id: "7",
-            title: "Weekly One-on-One",
-            startTime: "2024-01-17T11:00:00",
-            endTime: "2024-01-17T11:30:00",
-            type: "appointment",
-            location: "Manager's Office",
-            description: "Weekly one-on-one meeting with manager",
-            isRecurring: true,
-            recurringPattern: {
-              frequency: "WEEK",
-              interval: 1,
-              occurrences: 20,
-            },
-          },
-        ]);
-      }, 1000);
-    });
-  },
-  createEvent: async (event: CalendarEvent) => {
-    // Simulate API call
-    return new Promise<CalendarEvent>((resolve) => {
-      setTimeout(() => resolve(event), 1000);
-    });
-  },
-  updateEvent: async (event: CalendarEvent) => {
-    // Simulate API call
-    return new Promise<CalendarEvent>((resolve) => {
-      setTimeout(() => resolve(event), 1000);
-    });
-  },
-  deleteEvent: async (id: string) => {
-    // Simulate API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => resolve(), 1000);
-    });
-  },
-};
-
-function* fetchEventsSaga() {
-  try {
-    yield put(setLoading(true));
-    const events: CalendarEvent[] = yield call(api.fetchEvents);
-    yield put(setEvents(events));
-  } catch (error) {
-    yield put(setError("Failed to fetch events"));
-  } finally {
-    yield put(setLoading(false));
-  }
-}
-
-function* createEventSaga(action: PayloadAction<CalendarEvent>) {
-  try {
-    yield put(setLoading(true));
-    const newEvent: CalendarEvent = yield call(api.createEvent, action.payload);
-    yield put(addEvent(newEvent));
-  } catch (error) {
-    yield put(
-      setError(
-        error instanceof Error ? error.message : "Failed to create event"
-      )
-    );
-  } finally {
-    yield put(setLoading(false));
-  }
-}
-
-function* updateEventSaga(action: PayloadAction<CalendarEvent>) {
-  try {
-    yield put(setLoading(true));
-    const updatedEvent: CalendarEvent = yield call(
-      api.updateEvent,
-      action.payload
-    );
-    yield put(updateEvent(updatedEvent));
-  } catch (error) {
-    yield put(
-      setError(
-        error instanceof Error ? error.message : "Failed to update event"
-      )
-    );
-  } finally {
-    yield put(setLoading(false));
-  }
-}
-
-function* deleteEventSaga(action: PayloadAction<string>) {
-  try {
-    yield put(setLoading(true));
-    yield call(api.deleteEvent, action.payload);
-    yield put(deleteEvent(action.payload));
-  } catch (error) {
-    yield put(
-      setError(
-        error instanceof Error ? error.message : "Failed to delete event"
-      )
-    );
-  } finally {
-    yield put(setLoading(false));
-  }
-}
-
-export function* calendarSaga() {
-  yield takeLatest("calendar/fetchEvents", fetchEventsSaga);
-  yield takeLatest("calendar/createEvent", createEventSaga);
-  yield takeLatest("calendar/updateEvent", updateEventSaga);
-  yield takeLatest("calendar/deleteEvent", deleteEventSaga);
-}
+import { takeLatest, put, call } from "redux-saga/effects";import { PayloadAction } from "@reduxjs/toolkit";import {  setEvents,  setLoading,  setError,  addEvent,  updateEvent,  deleteEvent,} from "./calendarSlice";import { CalendarEvent } from "../types/calendar";import { RRULE_PRESETS } from "../utils/rruleUtils";const api = {  fetchEvents: async () => {    return new Promise<CalendarEvent[]>((resolve) => {      setTimeout(() => {        resolve([          {            id: "1",            title: "Team Meeting",            startTime: "2024-01-15T09:00:00",            endTime: "2024-01-15T10:00:00",            type: "appointment",            location: "Conference Room A",            description: "Weekly team sync meeting",            isRecurring: false,          },          {            id: "2",            title: "Project Review",            startTime: "2024-01-16T14:00:00",            endTime: "2024-01-16T15:30:00",            type: "webinar",            location: "Online",            description: "Review project progress and milestones",            isRecurring: false,          },          {            id: "3",            title: "Daily Standup",            startTime: "2024-01-15T09:30:00",            endTime: "2024-01-15T10:00:00",            type: "appointment",            location: "Conference Room B",            description: "Daily team standup meeting",            isRecurring: true,            rrule: "FREQ=DAILY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR;COUNT=30",           },          {            id: "4",            title: "Weekly Tech Talk",            startTime: "2024-01-19T15:00:00",            endTime: "2024-01-19T16:00:00",            type: "webinar",            location: "Main Auditorium",            description: "Weekly technical presentation",            isRecurring: true,            rrule: RRULE_PRESETS.WEEKLY + ";COUNT=20",           },          {            id: "5",            title: "Monthly All-Hands",            startTime: "2024-01-01T10:00:00",            endTime: "2024-01-01T11:30:00",            type: "webinar",            location: "Main Auditorium",            description: "Company-wide monthly meeting",            isRecurring: true,            rrule: "FREQ=MONTHLY;INTERVAL=1;BYDAY=1MO;COUNT=12",           },          {            id: "6",            title: "Quarterly Review",            startTime: "2024-01-31T13:00:00",            endTime: "2024-01-31T17:00:00",            type: "appointment",            location: "Executive Conference Room",            description: "Quarterly business review meeting",            isRecurring: true,            rrule: "FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=-1;COUNT=4",           },          {            id: "7",            title: "Weekly One-on-One",            startTime: "2024-01-17T11:00:00",            endTime: "2024-01-17T11:30:00",            type: "appointment",            location: "Manager's Office",            description: "Weekly one-on-one meeting with manager",            isRecurring: true,            recurringPattern: {              frequency: "WEEK",              interval: 1,              occurrences: 20,            },          },        ]);      }, 1000);    });  },  createEvent: async (event: CalendarEvent) => {    return new Promise<CalendarEvent>((resolve) => {      setTimeout(() => resolve(event), 1000);    });  },  updateEvent: async (event: CalendarEvent) => {    return new Promise<CalendarEvent>((resolve) => {      setTimeout(() => resolve(event), 1000);    });  },  deleteEvent: async (id: string) => {    return new Promise<void>((resolve) => {      setTimeout(() => resolve(), 1000);    });  },};function* fetchEventsSaga() {  try {    yield put(setLoading(true));    const events: CalendarEvent[] = yield call(api.fetchEvents);    yield put(setEvents(events));  } catch (error) {    yield put(setError("Failed to fetch events"));  } finally {    yield put(setLoading(false));  }}function* createEventSaga(action: PayloadAction<CalendarEvent>) {  try {    yield put(setLoading(true));    const newEvent: CalendarEvent = yield call(api.createEvent, action.payload);    yield put(addEvent(newEvent));  } catch (error) {    yield put(      setError(        error instanceof Error ? error.message : "Failed to create event"      )    );  } finally {    yield put(setLoading(false));  }}function* updateEventSaga(action: PayloadAction<CalendarEvent>) {  try {    yield put(setLoading(true));    const updatedEvent: CalendarEvent = yield call(      api.updateEvent,      action.payload    );    yield put(updateEvent(updatedEvent));  } catch (error) {    yield put(      setError(        error instanceof Error ? error.message : "Failed to update event"      )    );  } finally {    yield put(setLoading(false));  }}function* deleteEventSaga(action: PayloadAction<string>) {  try {    yield put(setLoading(true));    yield call(api.deleteEvent, action.payload);    yield put(deleteEvent(action.payload));  } catch (error) {    yield put(      setError(        error instanceof Error ? error.message : "Failed to delete event"      )    );  } finally {    yield put(setLoading(false));  }}export function* calendarSaga() {  yield takeLatest("calendar/fetchEvents", fetchEventsSaga);  yield takeLatest("calendar/createEvent", createEventSaga);  yield takeLatest("calendar/updateEvent", updateEventSaga);  yield takeLatest("calendar/deleteEvent", deleteEventSaga);}

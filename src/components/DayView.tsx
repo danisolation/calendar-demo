@@ -1,26 +1,22 @@
-import React from "react";
-import { Box, Typography, Paper, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
 import {
+  differenceInMinutes,
   format,
-  parseISO,
   isSameDay,
   isToday,
-  differenceInMinutes,
+  parseISO,
 } from "date-fns";
+import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
 import { CalendarEvent } from "../types/calendar";
-import { log } from "console";
-
 interface DayViewProps {
   currentDate: Date;
   onEventClick: (eventId: string) => void;
   onCellDoubleClick?: (date: Date) => void;
 }
-
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const CURRENT_TIME_INDICATOR_HEIGHT = 2;
-
 const DayView: React.FC<DayViewProps> = ({
   currentDate,
   onEventClick,
@@ -31,13 +27,10 @@ const DayView: React.FC<DayViewProps> = ({
   const events = useSelector((state: RootState) => state.calendar.events);
   const filter = useSelector((state: RootState) => state.calendar.filter);
   const [now, setNow] = React.useState(new Date());
-
-  // Update current time every minute
   React.useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
-
   const getEventsForHour = (hour: number): CalendarEvent[] => {
     return events.filter((event) => {
       const eventDate = parseISO(event.startTime);
@@ -48,28 +41,24 @@ const DayView: React.FC<DayViewProps> = ({
       );
     });
   };
-
   const calculateEventPosition = (event: CalendarEvent) => {
     const startTime = parseISO(event.startTime);
     const endTime = parseISO(event.endTime);
     const duration = differenceInMinutes(endTime, startTime);
-    const height = (duration / 60) * 48; // 48px per hour (Google Calendar-like)
+    const height = (duration / 60) * 48;
     const topOffset = (startTime.getMinutes() / 60) * 48;
-
     return {
-      height: Math.max(height - 1, 20), // Minimum height of 20px
+      height: Math.max(height - 1, 20),
       top: topOffset,
     };
   };
-
   const currentTimeIndicatorPosition = React.useMemo(() => {
     const minutes = now.getHours() * 60 + now.getMinutes();
     return (minutes / 60) * 48;
   }, [now]);
-
   return (
     <Box sx={{ height: "100%", overflow: "auto" }}>
-      {/* Day header */}
+      {}
       <Box
         sx={{
           p: 1.5,
@@ -93,11 +82,10 @@ const DayView: React.FC<DayViewProps> = ({
           {format(currentDate, "EEEE, MMMM d")}
         </Typography>
       </Box>
-
       <Box sx={{ display: "flex", minHeight: 1152 }}>
         {" "}
-        {/* 48px * 24 hours */}
-        {/* Time column */}
+        {}
+        {}
         <Box
           sx={{
             width: { xs: 46, sm: 56 },
@@ -141,11 +129,11 @@ const DayView: React.FC<DayViewProps> = ({
             </Box>
           ))}
         </Box>
-        {/* Events column */}
+        {}
         <Box
           sx={{ flex: 1, minWidth: { xs: 250, sm: 300 }, position: "relative" }}
         >
-          {/* Current time indicator */}
+          {}
           {isToday(currentDate) && (
             <Box
               sx={{
@@ -179,7 +167,6 @@ const DayView: React.FC<DayViewProps> = ({
               />
             </Box>
           )}
-
           {HOURS.map((hour) => {
             const hourEvents = getEventsForHour(hour);
             return (
@@ -201,7 +188,7 @@ const DayView: React.FC<DayViewProps> = ({
                       currentDate.getMonth(),
                       currentDate.getDate(),
                       hour,
-                      0, // Luôn set phút về 0
+                      0,
                       0,
                       0
                     );
@@ -209,7 +196,7 @@ const DayView: React.FC<DayViewProps> = ({
                   }
                 }}
               >
-                {/* Half-hour marker */}
+                {}
                 <Box
                   sx={{
                     position: "absolute",
@@ -220,7 +207,6 @@ const DayView: React.FC<DayViewProps> = ({
                     borderColor: "rgba(0,0,0,0.05)",
                   }}
                 />
-
                 {hourEvents.map((event) => {
                   const { height, top } = calculateEventPosition(event);
                   return (
@@ -235,8 +221,8 @@ const DayView: React.FC<DayViewProps> = ({
                         height: `${height}px`,
                         bgcolor:
                           event.type === "appointment"
-                            ? "rgba(3, 155, 229, 0.9)" // Google Calendar blue
-                            : "rgba(251, 140, 0, 0.9)", // Google Calendar orange
+                            ? "rgba(3, 155, 229, 0.9)"
+                            : "rgba(251, 140, 0, 0.9)",
                         color: "#fff",
                         p: 0.75,
                         cursor: "pointer",
@@ -307,5 +293,4 @@ const DayView: React.FC<DayViewProps> = ({
     </Box>
   );
 };
-
 export default DayView;

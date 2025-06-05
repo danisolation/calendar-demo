@@ -1,379 +1,1 @@
-import React, { useMemo, useCallback } from "react";
-import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
-import { Repeat } from "@mui/icons-material";
-import { format, isSameMonth, isSameDay, parseISO, isToday } from "date-fns";
-import { CalendarEvent, FilterType } from "../types/calendar";
-import {
-  getDaysInMonth,
-  getEventsForDate,
-  getEventBackgroundColor,
-  getEventTextColor,
-} from "../utils/calendarUtils";
-
-interface MonthViewProps {
-  currentDate: Date;
-  selectedDate: string;
-  events: CalendarEvent[];
-  filter: FilterType;
-  onDateClick: (date: Date) => void;
-  onEventClick: (eventId: string) => void;
-  onMoreEventsClick: (
-    e: React.MouseEvent,
-    day: Date,
-    events: CalendarEvent[]
-  ) => void;
-  onDayDoubleClick: (date: Date) => void;
-}
-
-// Day names constant to avoid recreation
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-// EventItem component extracted outside to avoid hooks issues
-interface EventItemProps {
-  event: CalendarEvent;
-  onEventClick: (eventId: string) => void;
-}
-
-const EventItem: React.FC<EventItemProps> = React.memo(
-  ({ event, onEventClick }) => {
-    const handleEventItemClick = useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onEventClick(event.id);
-      },
-      [event.id, onEventClick]
-    );
-
-    return (
-      <Box
-        onClick={handleEventItemClick}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          p: { xs: "1px 2px", sm: "2px 4px" },
-          borderRadius: 0.5,
-          bgcolor: getEventBackgroundColor(event.type),
-          color: getEventTextColor(event.type),
-          fontSize: { xs: "0.625rem", sm: "0.75rem" },
-          border: "1px solid",
-          borderColor: "divider",
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          minHeight: { xs: 16, sm: 20 },
-          "&:hover": {
-            filter: "brightness(0.95)",
-          },
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 500,
-            minWidth: "fit-content",
-            flexShrink: 0,
-            fontSize: "inherit",
-          }}
-        >
-          {format(parseISO(event.startTime), "HH:mm")}
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            flex: 1,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            display: { xs: "none", sm: "block" },
-            fontSize: "inherit",
-          }}
-        >
-          {event.title}
-        </Typography>
-        {event.isRecurring && (
-          <Repeat
-            sx={{
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              opacity: 0.8,
-              flexShrink: 0,
-              display: { xs: "none", sm: "block" },
-            }}
-          />
-        )}
-      </Box>
-    );
-  }
-);
-
-EventItem.displayName = "EventItem";
-
-// DayCell component extracted outside to avoid hooks issues
-interface DayCellProps {
-  day: Date;
-  currentDate: Date;
-  selectedDateObj: Date;
-  getFilteredEventsForDate: (date: Date) => CalendarEvent[];
-  onDateClick: (date: Date) => void;
-  onDayDoubleClick: (date: Date) => void;
-  onMoreEventsClick: (
-    e: React.MouseEvent,
-    day: Date,
-    events: CalendarEvent[]
-  ) => void;
-  onEventClick: (eventId: string) => void;
-}
-
-const DayCell: React.FC<DayCellProps> = React.memo(
-  ({
-    day,
-    currentDate,
-    selectedDateObj,
-    getFilteredEventsForDate,
-    onDateClick,
-    onDayDoubleClick,
-    onMoreEventsClick,
-    onEventClick,
-  }) => {
-    const dayEvents = getFilteredEventsForDate(day);
-    const isSelected = isSameDay(selectedDateObj, day);
-    const isCurrentMonth = isSameMonth(day, currentDate);
-    const dayIsToday = isToday(day);
-
-    const handleDateClick = useCallback(
-      () => onDateClick(day),
-      [day, onDateClick]
-    );
-    const handleDayDoubleClick = useCallback(
-      () => onDayDoubleClick(day),
-      [day, onDayDoubleClick]
-    );
-    const handleMoreEvents = useCallback(
-      (e: React.MouseEvent) => onMoreEventsClick(e, day, dayEvents),
-      [day, dayEvents, onMoreEventsClick]
-    );
-
-    return (
-      <Box
-        onClick={handleDateClick}
-        onDoubleClick={handleDayDoubleClick}
-        sx={{
-          p: { xs: 0.5, sm: 1 },
-          cursor: "pointer",
-          bgcolor: isSelected ? "calendar.tileColor" : "background.paper",
-          borderBottom: "1px solid",
-          borderRight: "1px solid",
-          borderColor: "divider",
-          height: { xs: 80, sm: 100, md: 120 },
-          width: "100%",
-          position: "relative",
-          overflow: "hidden",
-          ...(dayIsToday && {
-            "& .today-marker": {
-              display: "block",
-            },
-          }),
-          ...(isSelected && {
-            "& .today-marker": {
-              bgcolor: "primary.main",
-            },
-          }),
-          "&:hover": {
-            bgcolor: !isCurrentMonth
-              ? "background.default"
-              : isSelected
-              ? "calendar.tileColor"
-              : "action.hover",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: { xs: 0.5, sm: 1 },
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{
-              color: !isCurrentMonth
-                ? "text.disabled"
-                : dayIsToday
-                ? "primary.main"
-                : "text.primary",
-              fontWeight: dayIsToday ? 600 : 400,
-              fontSize: { xs: "0.75rem", sm: "0.875rem" },
-            }}
-          >
-            {format(day, "d")}
-          </Typography>
-          {dayIsToday && (
-            <Box
-              className="today-marker"
-              sx={{
-                px: 1,
-                py: 0.25,
-                bgcolor: "primary.light",
-                color: "common.white",
-                borderRadius: 10,
-                fontSize: { xs: "0.625rem", sm: "0.6875rem" },
-                fontWeight: 500,
-                display: { xs: "none", sm: "block" },
-              }}
-            >
-              Today
-            </Box>
-          )}
-        </Box>
-
-        {/* Events Container */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: { xs: 0.25, sm: 0.5 },
-            maxHeight: "calc(100% - 24px)",
-            overflow: "hidden",
-          }}
-        >
-          {dayEvents.slice(0, 2).map((event) => (
-            <EventItem
-              key={event.id}
-              event={event}
-              onEventClick={onEventClick}
-            />
-          ))}
-          {dayEvents.length > 2 && (
-            <Box
-              onClick={handleMoreEvents}
-              sx={{
-                color: "text.secondary",
-                pl: 0.5,
-                cursor: "pointer",
-                bgcolor: "background.paper",
-                px: 1,
-                py: 0.25,
-                borderRadius: 0.5,
-                fontSize: { xs: "0.625rem", sm: "0.75rem" },
-                "&:hover": {
-                  bgcolor: "action.hover",
-                },
-              }}
-            >
-              <Typography variant="caption" sx={{ fontSize: "inherit" }}>
-                +{dayEvents.length - 2} more
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    );
-  }
-);
-
-DayCell.displayName = "DayCell";
-
-const MonthView: React.FC<MonthViewProps> = React.memo(
-  ({
-    currentDate,
-    selectedDate,
-    events,
-    filter,
-    onDateClick,
-    onEventClick,
-    onMoreEventsClick,
-    onDayDoubleClick,
-  }) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-    // Memoize days in month calculation
-    const daysInMonth = useMemo(
-      () => getDaysInMonth(currentDate),
-      [currentDate]
-    );
-
-    // Memoize selected date object
-    const selectedDateObj = useMemo(
-      () => new Date(selectedDate),
-      [selectedDate]
-    );
-
-    // Memoize getEventsForDate function with current filter
-    const getFilteredEventsForDate = useCallback(
-      (date: Date) => getEventsForDate(events, date, filter),
-      [events, filter]
-    );
-
-    // Memoize weekday headers
-    const weekdayHeaders = useMemo(
-      () =>
-        DAY_NAMES.map((day) => (
-          <Box
-            key={day}
-            sx={{
-              p: { xs: 1, sm: 1.5 },
-              textAlign: "center",
-              borderBottom: "1px solid",
-              borderRight: "1px solid",
-              borderColor: "divider",
-              width: "100%",
-            }}
-          >
-            <Typography
-              variant="subtitle2"
-              sx={{
-                color: "text.secondary",
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              }}
-            >
-              {isMobile ? day.charAt(0) : day}
-            </Typography>
-          </Box>
-        )),
-      [isMobile]
-    );
-
-    return (
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-          bgcolor: "background.paper",
-          borderRadius: 1,
-          overflow: "hidden",
-          border: "1px solid",
-          borderColor: "divider",
-          height: "100%",
-          minHeight: { xs: 500, sm: 600, md: 700 },
-          maxHeight: {
-            xs: "calc(100vh - 120px)",
-            sm: "calc(100vh - 140px)",
-            md: "calc(100vh - 160px)",
-          },
-        }}
-      >
-        {weekdayHeaders}
-        {daysInMonth.map((day) => (
-          <DayCell
-            key={day.toString()}
-            day={day}
-            currentDate={currentDate}
-            selectedDateObj={selectedDateObj}
-            getFilteredEventsForDate={getFilteredEventsForDate}
-            onDateClick={onDateClick}
-            onDayDoubleClick={onDayDoubleClick}
-            onMoreEventsClick={onMoreEventsClick}
-            onEventClick={onEventClick}
-          />
-        ))}
-      </Box>
-    );
-  }
-);
-
-MonthView.displayName = "MonthView";
-
-export default MonthView;
+import React, { useMemo, useCallback } from "react";import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";import { Repeat } from "@mui/icons-material";import { format, isSameMonth, isSameDay, parseISO, isToday } from "date-fns";import { CalendarEvent, FilterType } from "../types/calendar";import {  getDaysInMonth,  getEventsForDate,  getEventBackgroundColor,  getEventTextColor,} from "../utils/calendarUtils";interface MonthViewProps {  currentDate: Date;  selectedDate: string;  events: CalendarEvent[];  filter: FilterType;  onDateClick: (date: Date) => void;  onEventClick: (eventId: string) => void;  onMoreEventsClick: (    e: React.MouseEvent,    day: Date,    events: CalendarEvent[]  ) => void;  onDayDoubleClick: (date: Date) => void;}const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];interface EventItemProps {  event: CalendarEvent;  onEventClick: (eventId: string) => void;}const EventItem: React.FC<EventItemProps> = React.memo(  ({ event, onEventClick }) => {    const handleEventItemClick = useCallback(      (e: React.MouseEvent) => {        e.stopPropagation();        onEventClick(event.id);      },      [event.id, onEventClick]    );    return (      <Box        onClick={handleEventItemClick}        sx={{          display: "flex",          alignItems: "center",          gap: 0.5,          p: { xs: "1px 2px", sm: "2px 4px" },          borderRadius: 0.5,          bgcolor: getEventBackgroundColor(event.type),          color: getEventTextColor(event.type),          fontSize: { xs: "0.625rem", sm: "0.75rem" },          border: "1px solid",          borderColor: "divider",          cursor: "pointer",          whiteSpace: "nowrap",          overflow: "hidden",          minHeight: { xs: 16, sm: 20 },          "&:hover": {            filter: "brightness(0.95)",          },        }}      >        <Typography          variant="caption"          sx={{            fontWeight: 500,            minWidth: "fit-content",            flexShrink: 0,            fontSize: "inherit",          }}        >          {format(parseISO(event.startTime), "HH:mm")}        </Typography>        <Typography          variant="caption"          sx={{            flex: 1,            overflow: "hidden",            textOverflow: "ellipsis",            whiteSpace: "nowrap",            display: { xs: "none", sm: "block" },            fontSize: "inherit",          }}        >          {event.title}        </Typography>        {event.isRecurring && (          <Repeat            sx={{              fontSize: { xs: "0.75rem", sm: "0.875rem" },              opacity: 0.8,              flexShrink: 0,              display: { xs: "none", sm: "block" },            }}          />        )}      </Box>    );  });EventItem.displayName = "EventItem";interface DayCellProps {  day: Date;  currentDate: Date;  selectedDateObj: Date;  getFilteredEventsForDate: (date: Date) => CalendarEvent[];  onDateClick: (date: Date) => void;  onDayDoubleClick: (date: Date) => void;  onMoreEventsClick: (    e: React.MouseEvent,    day: Date,    events: CalendarEvent[]  ) => void;  onEventClick: (eventId: string) => void;}const DayCell: React.FC<DayCellProps> = React.memo(  ({    day,    currentDate,    selectedDateObj,    getFilteredEventsForDate,    onDateClick,    onDayDoubleClick,    onMoreEventsClick,    onEventClick,  }) => {    const dayEvents = getFilteredEventsForDate(day);    const isSelected = isSameDay(selectedDateObj, day);    const isCurrentMonth = isSameMonth(day, currentDate);    const dayIsToday = isToday(day);    const handleDateClick = useCallback(      () => onDateClick(day),      [day, onDateClick]    );    const handleDayDoubleClick = useCallback(      () => onDayDoubleClick(day),      [day, onDayDoubleClick]    );    const handleMoreEvents = useCallback(      (e: React.MouseEvent) => onMoreEventsClick(e, day, dayEvents),      [day, dayEvents, onMoreEventsClick]    );    return (      <Box        onClick={handleDateClick}        onDoubleClick={handleDayDoubleClick}        sx={{          p: { xs: 0.5, sm: 1 },          cursor: "pointer",          bgcolor: isSelected ? "calendar.tileColor" : "background.paper",          borderBottom: "1px solid",          borderRight: "1px solid",          borderColor: "divider",          height: { xs: 80, sm: 100, md: 120 },          width: "100%",          position: "relative",          overflow: "hidden",          ...(dayIsToday && {            "& .today-marker": {              display: "block",            },          }),          ...(isSelected && {            "& .today-marker": {              bgcolor: "primary.main",            },          }),          "&:hover": {            bgcolor: !isCurrentMonth              ? "background.default"              : isSelected              ? "calendar.tileColor"              : "action.hover",          },        }}      >        <Box          sx={{            display: "flex",            justifyContent: "space-between",            alignItems: "center",            mb: { xs: 0.5, sm: 1 },          }}        >          <Typography            variant="body2"            sx={{              color: !isCurrentMonth                ? "text.disabled"                : dayIsToday                ? "primary.main"                : "text.primary",              fontWeight: dayIsToday ? 600 : 400,              fontSize: { xs: "0.75rem", sm: "0.875rem" },            }}          >            {format(day, "d")}          </Typography>          {dayIsToday && (            <Box              className="today-marker"              sx={{                px: 1,                py: 0.25,                bgcolor: "primary.light",                color: "common.white",                borderRadius: 10,                fontSize: { xs: "0.625rem", sm: "0.6875rem" },                fontWeight: 500,                display: { xs: "none", sm: "block" },              }}            >              Today            </Box>          )}        </Box>        {}        <Box          sx={{            display: "flex",            flexDirection: "column",            gap: { xs: 0.25, sm: 0.5 },            maxHeight: "calc(100% - 24px)",            overflow: "hidden",          }}        >          {dayEvents.slice(0, 2).map((event) => (            <EventItem              key={event.id}              event={event}              onEventClick={onEventClick}            />          ))}          {dayEvents.length > 2 && (            <Box              onClick={handleMoreEvents}              sx={{                color: "text.secondary",                pl: 0.5,                cursor: "pointer",                bgcolor: "background.paper",                px: 1,                py: 0.25,                borderRadius: 0.5,                fontSize: { xs: "0.625rem", sm: "0.75rem" },                "&:hover": {                  bgcolor: "action.hover",                },              }}            >              <Typography variant="caption" sx={{ fontSize: "inherit" }}>                +{dayEvents.length - 2} more              </Typography>            </Box>          )}        </Box>      </Box>    );  });DayCell.displayName = "DayCell";const MonthView: React.FC<MonthViewProps> = React.memo(  ({    currentDate,    selectedDate,    events,    filter,    onDateClick,    onEventClick,    onMoreEventsClick,    onDayDoubleClick,  }) => {    const theme = useTheme();    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));    const daysInMonth = useMemo(      () => getDaysInMonth(currentDate),      [currentDate]    );    const selectedDateObj = useMemo(      () => new Date(selectedDate),      [selectedDate]    );    const getFilteredEventsForDate = useCallback(      (date: Date) => getEventsForDate(events, date, filter),      [events, filter]    );    const weekdayHeaders = useMemo(      () =>        DAY_NAMES.map((day) => (          <Box            key={day}            sx={{              p: { xs: 1, sm: 1.5 },              textAlign: "center",              borderBottom: "1px solid",              borderRight: "1px solid",              borderColor: "divider",              width: "100%",            }}          >            <Typography              variant="subtitle2"              sx={{                color: "text.secondary",                fontSize: { xs: "0.75rem", sm: "0.875rem" },              }}            >              {isMobile ? day.charAt(0) : day}            </Typography>          </Box>        )),      [isMobile]    );    return (      <Box        sx={{          display: "grid",          gridTemplateColumns: "repeat(7, minmax(0, 1fr))",          bgcolor: "background.paper",          borderRadius: 1,          overflow: "hidden",          border: "1px solid",          borderColor: "divider",          height: "100%",          minHeight: { xs: 500, sm: 600, md: 700 },          maxHeight: {            xs: "calc(100vh - 120px)",            sm: "calc(100vh - 140px)",            md: "calc(100vh - 160px)",          },        }}      >        {weekdayHeaders}        {daysInMonth.map((day) => (          <DayCell            key={day.toString()}            day={day}            currentDate={currentDate}            selectedDateObj={selectedDateObj}            getFilteredEventsForDate={getFilteredEventsForDate}            onDateClick={onDateClick}            onDayDoubleClick={onDayDoubleClick}            onMoreEventsClick={onMoreEventsClick}            onEventClick={onEventClick}          />        ))}      </Box>    );  });MonthView.displayName = "MonthView";export default MonthView;
