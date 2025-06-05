@@ -1,21 +1,20 @@
-import React, { useMemo, useCallback } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
 } from "@mui/material";
+import React, { useCallback, useMemo } from "react";
 import { CalendarEvent } from "../types/calendar";
-
 interface CreateEventDialogProps {
   open: boolean;
   onClose: () => void;
@@ -39,7 +38,6 @@ interface CreateEventDialogProps {
   setUseEndDate: React.Dispatch<React.SetStateAction<boolean>>;
   onCreateEvent: () => void;
 }
-
 const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
   ({
     open,
@@ -52,64 +50,54 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
     setUseEndDate,
     onCreateEvent,
   }) => {
-    // Memoize event field change handlers
     const handleTitleChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, title: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleStartTimeChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, startTime: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleEndTimeChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, endTime: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleTypeChange = useCallback(
       (e: any) => {
         setNewEvent((prev) => ({ ...prev, type: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleLocationChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, location: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleDescriptionChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, description: e.target.value }));
       },
       [setNewEvent]
     );
-
     const handleRecurringChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewEvent((prev) => ({ ...prev, isRecurring: e.target.checked }));
       },
       [setNewEvent]
     );
-
-    // Memoize recurring pattern change handlers
     const handleFrequencyChange = useCallback(
       (e: any) => {
         setRecurringPattern((prev) => ({ ...prev, frequency: e.target.value }));
       },
       [setRecurringPattern]
     );
-
     const handleIntervalChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setRecurringPattern((prev) => ({
@@ -119,21 +107,18 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
       },
       [setRecurringPattern]
     );
-
     const handleEndDateToggle = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setUseEndDate(e.target.checked);
       },
       [setUseEndDate]
     );
-
     const handleEndDateChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setRecurringPattern((prev) => ({ ...prev, endDate: e.target.value }));
       },
       [setRecurringPattern]
     );
-
     const handleOccurrencesChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         setRecurringPattern((prev) => ({
@@ -143,8 +128,6 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
       },
       [setRecurringPattern]
     );
-
-    // Memoize form sections
     const basicEventFields = useMemo(
       () => (
         <>
@@ -212,11 +195,8 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
         handleDescriptionChange,
       ]
     );
-
-    // Memoize recurring pattern fields
     const recurringPatternFields = useMemo(() => {
       if (!newEvent.isRecurring) return null;
-
       return (
         <Box sx={{ pl: 2, display: "flex", flexDirection: "column", gap: 2 }}>
           <FormControl fullWidth>
@@ -280,7 +260,6 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
       handleEndDateChange,
       handleOccurrencesChange,
     ]);
-
     return (
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle>Tạo sự kiện mới</DialogTitle>
@@ -312,7 +291,5 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = React.memo(
     );
   }
 );
-
 CreateEventDialog.displayName = "CreateEventDialog";
-
 export default CreateEventDialog;

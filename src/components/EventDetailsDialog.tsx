@@ -1,182 +1,1 @@
-import React, { useMemo } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Avatar,
-} from "@mui/material";
-import { VideoCall, LocationOn, AccessTime, Repeat } from "@mui/icons-material";
-import { format, parseISO } from "date-fns";
-import { CalendarEvent } from "../types/calendar";
-import {
-  getEventBackgroundColor,
-  getEventTextColor,
-} from "../utils/calendarUtils";
-import { rruleToText } from "../utils/rruleUtils";
-
-interface EventDetailsDialogProps {
-  open: boolean;
-  onClose: () => void;
-  event: CalendarEvent | undefined;
-}
-
-const EventDetailsDialog: React.FC<EventDetailsDialogProps> = React.memo(
-  ({ open, onClose, event }) => {
-    // Memoize formatted times to avoid recalculation
-    const formattedTimes = useMemo(() => {
-      if (!event) return null;
-
-      return {
-        startTime: format(parseISO(event.startTime), "h:mm a"),
-        endTime: format(parseISO(event.endTime), "h:mm a"),
-        date: format(parseISO(event.startTime), "EEEE, MMMM d"),
-      };
-    }, [event]);
-
-    // Memoize event colors
-    const eventColors = useMemo(() => {
-      if (!event) return null;
-
-      return {
-        backgroundColor: getEventBackgroundColor(event.type),
-        textColor: getEventTextColor(event.type),
-      };
-    }, [event]);
-
-    // Memoize recurring pattern text using RRule
-    const recurringText = useMemo(() => {
-      if (!event?.isRecurring) return null;
-
-      // Try to use RRule first, fallback to legacy pattern
-      if (event.rrule) {
-        try {
-          return rruleToText(event.rrule);
-        } catch (error) {
-          console.error("Error parsing RRule:", error);
-        }
-      }
-
-      // Fallback to legacy pattern
-      if (event.recurringPattern) {
-        return `Repeats every ${
-          event.recurringPattern.interval
-        } ${event.recurringPattern.frequency.toLowerCase()}${
-          event.recurringPattern.interval > 1 ? "s" : ""
-        }`;
-      }
-
-      return "Recurring event";
-    }, [event?.isRecurring, event?.rrule, event?.recurringPattern]);
-
-    // Memoize dialog title content
-    const titleContent = useMemo(() => {
-      if (!event || !eventColors || !formattedTimes) return null;
-
-      return (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          {event.type === "appointment" && event.clientAvatar && (
-            <Avatar src={event.clientAvatar} />
-          )}
-          {event.type === "webinar" && <VideoCall sx={{ fontSize: 24 }} />}
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {event.title}
-              {event.isRecurringInstance && (
-                <Typography variant="caption" sx={{ ml: 1, opacity: 0.8 }}>
-                  (Instance)
-                </Typography>
-              )}
-            </Typography>
-            <Typography variant="caption">{formattedTimes.date}</Typography>
-          </Box>
-          {event.isRecurring && <Repeat sx={{ fontSize: 20, opacity: 0.8 }} />}
-        </Box>
-      );
-    }, [event, eventColors, formattedTimes]);
-
-    // Memoize dialog content
-    const dialogContent = useMemo(() => {
-      if (!event || !formattedTimes) return null;
-
-      return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <AccessTime fontSize="small" sx={{ color: "text.secondary" }} />
-            <Typography variant="body2">
-              {formattedTimes.startTime} - {formattedTimes.endTime}
-            </Typography>
-          </Box>
-
-          {event.location && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <LocationOn fontSize="small" sx={{ color: "text.secondary" }} />
-              <Typography variant="body2">{event.location}</Typography>
-            </Box>
-          )}
-
-          {recurringText && (
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-              <Repeat
-                fontSize="small"
-                sx={{ color: "text.secondary", mt: 0.25 }}
-              />
-              <Typography variant="body2" sx={{ flex: 1 }}>
-                {recurringText}
-              </Typography>
-            </Box>
-          )}
-
-          {event.description && (
-            <Box
-              sx={{
-                mt: 1,
-                p: 1.5,
-                bgcolor: "background.default",
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {event.description}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      );
-    }, [event, formattedTimes, recurringText]);
-
-    if (!event || !eventColors || !formattedTimes) return null;
-
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle
-          sx={{
-            bgcolor: eventColors.backgroundColor,
-            color: eventColors.textColor,
-            p: 2,
-          }}
-        >
-          {titleContent}
-        </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>{dialogContent}</DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={onClose} color="inherit">
-            Close
-          </Button>
-          {event.type === "appointment" && (
-            <Button variant="contained" startIcon={<VideoCall />}>
-              Join Meeting
-            </Button>
-          )}
-        </DialogActions>
-      </Dialog>
-    );
-  }
-);
-
-EventDetailsDialog.displayName = "EventDetailsDialog";
-
-export default EventDetailsDialog;
+import React, { useMemo } from "react";import {  Dialog,  DialogTitle,  DialogContent,  DialogActions,  Button,  Box,  Typography,  Avatar,} from "@mui/material";import { VideoCall, LocationOn, AccessTime, Repeat } from "@mui/icons-material";import { format, parseISO } from "date-fns";import { CalendarEvent } from "../types/calendar";import {  getEventBackgroundColor,  getEventTextColor,} from "../utils/calendarUtils";import { rruleToText } from "../utils/rruleUtils";interface EventDetailsDialogProps {  open: boolean;  onClose: () => void;  event: CalendarEvent | undefined;}const EventDetailsDialog: React.FC<EventDetailsDialogProps> = React.memo(  ({ open, onClose, event }) => {    const formattedTimes = useMemo(() => {      if (!event) return null;      return {        startTime: format(parseISO(event.startTime), "h:mm a"),        endTime: format(parseISO(event.endTime), "h:mm a"),        date: format(parseISO(event.startTime), "EEEE, MMMM d"),      };    }, [event]);    const eventColors = useMemo(() => {      if (!event) return null;      return {        backgroundColor: getEventBackgroundColor(event.type),        textColor: getEventTextColor(event.type),      };    }, [event]);    const recurringText = useMemo(() => {      if (!event?.isRecurring) return null;      if (event.rrule) {        try {          return rruleToText(event.rrule);        } catch (error) {          console.error("Error parsing RRule:", error);        }      }      if (event.recurringPattern) {        return `Repeats every ${          event.recurringPattern.interval        } ${event.recurringPattern.frequency.toLowerCase()}${          event.recurringPattern.interval > 1 ? "s" : ""        }`;      }      return "Recurring event";    }, [event?.isRecurring, event?.rrule, event?.recurringPattern]);    const titleContent = useMemo(() => {      if (!event || !eventColors || !formattedTimes) return null;      return (        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>          {event.type === "appointment" && event.clientAvatar && (            <Avatar src={event.clientAvatar} />          )}          {event.type === "webinar" && <VideoCall sx={{ fontSize: 24 }} />}          <Box sx={{ flex: 1 }}>            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>              {event.title}              {event.isRecurringInstance && (                <Typography variant="caption" sx={{ ml: 1, opacity: 0.8 }}>                  (Instance)                </Typography>              )}            </Typography>            <Typography variant="caption">{formattedTimes.date}</Typography>          </Box>          {event.isRecurring && <Repeat sx={{ fontSize: 20, opacity: 0.8 }} />}        </Box>      );    }, [event, eventColors, formattedTimes]);    const dialogContent = useMemo(() => {      if (!event || !formattedTimes) return null;      return (        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>            <AccessTime fontSize="small" sx={{ color: "text.secondary" }} />            <Typography variant="body2">              {formattedTimes.startTime} - {formattedTimes.endTime}            </Typography>          </Box>          {event.location && (            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>              <LocationOn fontSize="small" sx={{ color: "text.secondary" }} />              <Typography variant="body2">{event.location}</Typography>            </Box>          )}          {recurringText && (            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>              <Repeat                fontSize="small"                sx={{ color: "text.secondary", mt: 0.25 }}              />              <Typography variant="body2" sx={{ flex: 1 }}>                {recurringText}              </Typography>            </Box>          )}          {event.description && (            <Box              sx={{                mt: 1,                p: 1.5,                bgcolor: "background.default",                borderRadius: 1,              }}            >              <Typography variant="body2" color="text.secondary">                {event.description}              </Typography>            </Box>          )}        </Box>      );    }, [event, formattedTimes, recurringText]);    if (!event || !eventColors || !formattedTimes) return null;    return (      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>        <DialogTitle          sx={{            bgcolor: eventColors.backgroundColor,            color: eventColors.textColor,            p: 2,          }}        >          {titleContent}        </DialogTitle>        <DialogContent sx={{ p: 2 }}>{dialogContent}</DialogContent>        <DialogActions sx={{ p: 2, pt: 0 }}>          <Button onClick={onClose} color="inherit">            Close          </Button>          {event.type === "appointment" && (            <Button variant="contained" startIcon={<VideoCall />}>              Join Meeting            </Button>          )}        </DialogActions>      </Dialog>    );  });EventDetailsDialog.displayName = "EventDetailsDialog";export default EventDetailsDialog;
