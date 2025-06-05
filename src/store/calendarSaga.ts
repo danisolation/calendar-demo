@@ -9,6 +9,7 @@ import {
   deleteEvent,
 } from "./calendarSlice";
 import { CalendarEvent } from "../types/calendar";
+import { RRULE_PRESETS } from "../utils/rruleUtils";
 
 // Mock API calls - replace with actual API endpoints
 const api = {
@@ -17,118 +18,89 @@ const api = {
     return new Promise<CalendarEvent[]>((resolve) => {
       setTimeout(() => {
         resolve([
+          // Non-recurring events
           {
             id: "1",
-            title: "First Session with Alex Stan",
-            startTime: "2024-01-04T09:00:00",
-            endTime: "2024-01-04T09:30:00",
+            title: "Team Meeting",
+            startTime: "2024-01-15T09:00:00",
+            endTime: "2024-01-15T10:00:00",
             type: "appointment",
-            clientName: "Alex Stan",
-            clientAvatar: "/avatar.jpg",
-            color: "#5684AE",
+            location: "Conference Room A",
+            description: "Weekly team sync meeting",
+            isRecurring: false,
           },
           {
             id: "2",
-            title: "Webinar: How to cope with trauma in professional life",
-            startTime: "2024-01-04T14:00:00",
-            endTime: "2024-01-04T15:30:00",
+            title: "Project Review",
+            startTime: "2024-01-16T14:00:00",
+            endTime: "2024-01-16T15:30:00",
             type: "webinar",
-            description: "Professional development webinar",
-            color: "#F9BE81",
+            location: "Online",
+            description: "Review project progress and milestones",
+            isRecurring: false,
           },
+
+          // RRule-based recurring events
           {
             id: "3",
-            title: "Team Meeting with Sarah Johnson",
-            startTime: "2024-01-05T10:00:00",
-            endTime: "2024-01-05T11:00:00",
+            title: "Daily Standup",
+            startTime: "2024-01-15T09:30:00",
+            endTime: "2024-01-15T10:00:00",
             type: "appointment",
-            clientName: "Sarah Johnson",
-            clientAvatar: "/avatar2.jpg",
-            color: "#5684AE",
-            location: "Meeting Room 1",
+            location: "Conference Room B",
+            description: "Daily team standup meeting",
+            isRecurring: true,
+            rrule: "FREQ=DAILY;INTERVAL=1;BYDAY=MO,TU,WE,TH,FR;COUNT=30", // Weekdays only for 30 occurrences
           },
           {
             id: "4",
-            title: "Webinar: Modern Web Development",
-            startTime: "2024-01-07T13:00:00",
-            endTime: "2024-01-07T14:30:00",
+            title: "Weekly Tech Talk",
+            startTime: "2024-01-19T15:00:00",
+            endTime: "2024-01-19T16:00:00",
             type: "webinar",
-            description: "Learn about the latest web development trends",
-            color: "#F9BE81",
+            location: "Main Auditorium",
+            description: "Weekly technical presentation",
+            isRecurring: true,
+            rrule: RRULE_PRESETS.WEEKLY + ";COUNT=20", // Weekly for 20 weeks
           },
           {
             id: "5",
-            title: "Monthly Review with Mike Brown",
-            startTime: "2024-01-10T15:00:00",
-            endTime: "2024-01-10T16:00:00",
-            type: "appointment",
-            clientName: "Mike Brown",
-            clientAvatar: "/avatar3.jpg",
-            color: "#5684AE",
+            title: "Monthly All-Hands",
+            startTime: "2024-01-01T10:00:00",
+            endTime: "2024-01-01T11:30:00",
+            type: "webinar",
+            location: "Main Auditorium",
+            description: "Company-wide monthly meeting",
             isRecurring: true,
-            recurringPattern: {
-              frequency: "MONTH",
-              interval: 1,
-              endDate: "2024-12-31",
-            },
+            rrule: "FREQ=MONTHLY;INTERVAL=1;BYDAY=1MO;COUNT=12", // First Monday of every month for 12 months
           },
           {
             id: "6",
-            title: "Weekly Team Sync",
-            startTime: "2024-01-12T09:00:00",
-            endTime: "2024-01-12T10:00:00",
+            title: "Quarterly Review",
+            startTime: "2024-01-31T13:00:00",
+            endTime: "2024-01-31T17:00:00",
             type: "appointment",
-            clientName: "Development Team",
-            color: "#5684AE",
+            location: "Executive Conference Room",
+            description: "Quarterly business review meeting",
+            isRecurring: true,
+            rrule: "FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=-1;COUNT=4", // Last day of quarter for 4 quarters
+          },
+
+          // Legacy recurring events (for backwards compatibility testing)
+          {
+            id: "7",
+            title: "Weekly One-on-One",
+            startTime: "2024-01-17T11:00:00",
+            endTime: "2024-01-17T11:30:00",
+            type: "appointment",
+            location: "Manager's Office",
+            description: "Weekly one-on-one meeting with manager",
             isRecurring: true,
             recurringPattern: {
               frequency: "WEEK",
               interval: 1,
-              endDate: "2024-03-31",
+              occurrences: 20,
             },
-          },
-          {
-            id: "7",
-            title: "Webinar: Agile Project Management",
-            startTime: "2024-01-15T11:00:00",
-            endTime: "2024-01-15T12:30:00",
-            type: "webinar",
-            description: "Best practices in Agile methodology",
-            color: "#F9BE81",
-          },
-          {
-            id: "8",
-            title: "Client Consultation - Emma Wilson",
-            startTime: "2024-01-18T14:00:00",
-            endTime: "2024-01-18T15:00:00",
-            type: "appointment",
-            clientName: "Emma Wilson",
-            clientAvatar: "/avatar4.jpg",
-            color: "#5684AE",
-          },
-          {
-            id: "9",
-            title: "Daily Standup",
-            startTime: "2024-01-20T09:30:00",
-            endTime: "2024-01-20T10:00:00",
-            type: "appointment",
-            clientName: "Development Team",
-            color: "#5684AE",
-            isRecurring: true,
-            recurringPattern: {
-              frequency: "DAY",
-              interval: 1,
-              endDate: "2024-01-31",
-            },
-          },
-          {
-            id: "10",
-            title: "Webinar: Future of AI in Business",
-            startTime: "2025-07-25T15:00:00",
-            endTime: "2025-07-25T16:30:00",
-            type: "webinar",
-            description: "Exploring AI applications in modern business",
-            color: "#F9BE81",
           },
         ]);
       }, 1000);
@@ -160,11 +132,7 @@ function* fetchEventsSaga() {
     const events: CalendarEvent[] = yield call(api.fetchEvents);
     yield put(setEvents(events));
   } catch (error) {
-    yield put(
-      setError(
-        error instanceof Error ? error.message : "Failed to fetch events"
-      )
-    );
+    yield put(setError("Failed to fetch events"));
   } finally {
     yield put(setLoading(false));
   }
